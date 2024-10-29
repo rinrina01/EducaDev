@@ -20,7 +20,7 @@ class FluroRouterSetup {
     },
   );
 
-  static final Handler _registrePageHandler = Handler(
+  static final Handler _registerPageHandler = Handler(
     handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
       return const RegisterPage();
     },
@@ -44,8 +44,8 @@ class FluroRouterSetup {
     );
 
     router.define(
-      "registre",
-      handler: _registrePageHandler,
+      "register",
+      handler: _registerPageHandler,
     );
 
     router.define(

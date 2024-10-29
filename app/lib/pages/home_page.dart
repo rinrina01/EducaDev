@@ -12,7 +12,7 @@ class _HomePageState extends State<HomePage> {
   void toRedirected() {
     FluroRouterSetup.router.navigateTo(
       context,
-      "my-account",
+      "login",
     );
   }
 
