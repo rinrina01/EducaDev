@@ -64,7 +64,7 @@ class _MyAccountPageState extends State<MyAccountPage> {
         );
       }
     }
-  }
+  } 
 
   void _showUpdateFnameDialog() {
     final TextEditingController _fnameController = TextEditingController();
