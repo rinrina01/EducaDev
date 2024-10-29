@@ -1,3 +1,4 @@
+import 'package:app/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -28,10 +29,16 @@ class _LoginPageState extends State<LoginPage> {
 
       try {
         final credential =
-            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text,
           password: _passwordController.text,
         );
+
+        FluroRouterSetup.router.navigateTo(
+          context,
+          "/",
+        );
+
         print("User registered: ${credential.user?.uid}");
       } on FirebaseAuthException catch (e) {
         if (e.code == 'email-already-in-use') {

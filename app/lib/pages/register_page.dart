@@ -1,3 +1,5 @@
+import 'package:app/routes/routes.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -9,12 +11,10 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  // Define a GlobalKey for the form
   final _formKey = GlobalKey<FormState>();
 
-  // Text controllers for each field
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _fNameController = TextEditingController();
+  final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -22,7 +22,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   void dispose() {
     _nameController.dispose();
-    _fNameController.dispose();
+    _firstNameController.dispose();
     _ageController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -41,7 +41,22 @@ class _RegisterPageState extends State<RegisterPage> {
           email: _emailController.text,
           password: _passwordController.text,
         );
-        print("User registered: ${credential.user?.uid}");
+
+        if (credential.user != null) {
+          FirebaseFirestore db = FirebaseFirestore.instance;
+          final user = <String, String>{
+            "name": _nameController.text,
+            "firstName": _firstNameController.text,
+            "age": _ageController.text,
+            "email": _emailController.text,
+            "userId": credential.user!.uid,
+          };
+          await db.collection("user").doc(credential.user!.uid).set(user);
+          FluroRouterSetup.router.navigateTo(
+            context,
+            "/",
+          );
+        }
       } on FirebaseAuthException catch (e) {
         if (e.code == 'email-already-in-use') {
           print('The email address is already in use by another account.');
@@ -66,7 +81,7 @@ class _RegisterPageState extends State<RegisterPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextFormField(
-            controller: _fNameController,
+            controller: _firstNameController,
             decoration: const InputDecoration(labelText: 'First Name'),
             validator: (value) {
               if (value == null || value.isEmpty) {
