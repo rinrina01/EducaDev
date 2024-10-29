@@ -54,7 +54,7 @@ class _RegisterPageState extends State<RegisterPage> {
           await db.collection("user").doc(credential.user!.uid).set(user);
           FluroRouterSetup.router.navigateTo(
             context,
-            "/",
+            "/my-account",  /// A MODIFIER !!!!
           );
         }
       } on FirebaseAuthException catch (e) {
