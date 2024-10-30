@@ -9,17 +9,35 @@ class RouteProvider extends ChangeNotifier {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   User? _user;
+  bool? _isAdmin;
 
   RouteProvider() {
-    // Écoute les changements d'état d'authentification
     _auth.authStateChanges().listen((user) {
-      _user = user; // Met à jour l'utilisateur connecté
-      notifyListeners(); // Notifie les widgets qui écoutent les changements
+      _user = user;
+      checkAdminStatus();
+
+      notifyListeners();
     });
+  }
+
+  Future<void> checkAdminStatus() async {
+    if (_user != null) {
+      DocumentSnapshot userDoc =
+          await _db.collection('user').doc(_user?.uid).get();
+
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>?;
+        final String role = userData?['role'] ?? 'user';
+
+        _isAdmin = role == 'admin';
+        notifyListeners();
+      }
+    }
   }
 
   // Vérifie si l'utilisateur est connecté
   bool get isAuthenticated => _user != null;
+  bool get isAdmin => _isAdmin ?? false;
 
   // Redirige vers la page de connexion si l'utilisateur n'est pas authentifié
   void redirectIfNotAuthenticated(BuildContext context) {
@@ -32,25 +50,8 @@ class RouteProvider extends ChangeNotifier {
   Future<void> redirectIfNotAdmin(BuildContext context) async {
     redirectIfNotAuthenticated(context);
 
-    // Récupère les données de l'utilisateur depuis Firestore
-    DocumentSnapshot userDoc =
-        await _db.collection('user').doc(_user?.uid).get();
-
-    // Vérifie si le document utilisateur existe
-    if (userDoc.exists) {
-      // Convertit les données du document en Map pour l'accès aux champs
-      final userData = userDoc.data() as Map<String, dynamic>?;
-
-      // Récupère le rôle de l'utilisateur, avec un rôle par défaut de 'user'
-      final String role = userData?['role'] ?? 'user';
-
-      if (role != 'admin') {
-        // Si l'utilisateur n'est pas admin, redirige vers la page de connexion
-        FluroRouterSetup.router.navigateTo(context, "login");
-      }
-    } else {
-      // Si le document utilisateur n'existe pas, redirige vers la page de connexion
-      FluroRouterSetup.router.navigateTo(context, "login");
+    if (_isAdmin == false) {
+      FluroRouterSetup.router.navigateTo(context, "/");
     }
   }
 }

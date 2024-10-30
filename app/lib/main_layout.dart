@@ -12,31 +12,33 @@ class MainLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<RouteProvider>(context, listen: false);
+    final authProvider = Provider.of<RouteProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
         automaticallyImplyLeading: false,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.account_circle),
-            onPressed: () {
-              FluroRouterSetup.router.navigateTo(
-                context,
-                "admin/quiz",
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.account_circle),
-            onPressed: () {
-              FluroRouterSetup.router.navigateTo(
-                context,
-                "admin/view-score",
-              );
-            },
-          ),
+          if (!authProvider.isAuthenticated)
+            TextButton(
+              onPressed: () {
+                FluroRouterSetup.router.navigateTo(
+                  context,
+                  "login",
+                );
+              },
+              child: const Text("Login"),
+            ),
+          if (authProvider.isAdmin)
+            IconButton(
+              icon: const Icon(Icons.account_circle),
+              onPressed: () {
+                FluroRouterSetup.router.navigateTo(
+                  context,
+                  "my-account",
+                );
+              },
+            ),
           if (authProvider.isAuthenticated)
             IconButton(
               icon: const Icon(Icons.logout),
@@ -48,11 +50,49 @@ class MainLayout extends StatelessWidget {
                   clearStack: true,
                 );
               },
-              tooltip: 'Logout',
             ),
         ],
       ),
       body: child,
+      bottomNavigationBar: BottomNavigationBar(
+        onTap: (index) {
+          print(authProvider.isAdmin);
+          switch (index) {
+            case 0:
+              FluroRouterSetup.router
+                  .navigateTo(context, '/', clearStack: true);
+              break;
+            case 1:
+              if (authProvider.isAdmin) {
+                FluroRouterSetup.router
+                    .navigateTo(context, "admin/quiz", clearStack: true);
+                break;
+              }
+              FluroRouterSetup.router.navigateTo(
+                context,
+                "my-account",
+              );
+
+              break;
+          }
+        },
+        items: <BottomNavigationBarItem>[
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          if (authProvider.isAdmin)
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.dashboard),
+              label: 'Dashboard',
+            ),
+          if (!authProvider.isAdmin)
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.account_circle),
+              label: 'My Account',
+            ),
+        ],
+      ),
     );
   }
 }

@@ -45,42 +45,54 @@ class _QuizAdminPageState extends State<QuizAdminPage> {
   @override
   Widget build(BuildContext context) {
     return MainLayout(
-      title: 'Quiz Admin',
-      child: Scaffold(
-        body: FutureBuilder<List<Map<String, dynamic>>>(
-          future: _quizzesFuture,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(child: Text('No quizzes available.'));
-            } else {
-              final quizzes = snapshot.data!;
+        title: 'Quiz Admin',
+        child: Scaffold(
+          body: FutureBuilder<List<Map<String, dynamic>>>(
+            future: _quizzesFuture,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(child: Text('No quizzes available.'));
+              } else {
+                final quizzes = snapshot.data!;
 
-              return ListView.builder(
-                itemCount: quizzes.length,
-                itemBuilder: (context, index) {
-                  final quiz = quizzes[index];
-                  final quizId = quiz['id'] as String;
-                  final category = quiz['category'];
-                  final questionCount = (quiz['questions'] as List).length;
+                return ListView.builder(
+                  itemCount: quizzes.length,
+                  itemBuilder: (context, index) {
+                    final quiz = quizzes[index];
+                    final quizId = quiz['id'] as String;
+                    final category = quiz['category'];
+                    final questionCount = (quiz['questions'] as List).length;
 
-                  return QuizCardAdmin(
-                    category: category,
-                    questionCount: questionCount,
-                    onDelete: () => _deleteQuiz(quizId),
-                    onUpdate: () => _updateQuiz(quizId),
-                  );
-                },
-              );
-            }
-          },
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: toRedirected,
-          tooltip: 'Add Quiz',
-          child: const Icon(Icons.add),
-        ),
-      ),
-    );
+                    return QuizCardAdmin(
+                      category: category,
+                      questionCount: questionCount,
+                      onDelete: () => _deleteQuiz(quizId),
+                      onUpdate: () => _updateQuiz(quizId),
+                    );
+                  },
+                );
+              }
+            },
+          ),
+          floatingActionButton: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              FloatingActionButton(
+                heroTag: 'quizStateButton',
+                onPressed: toRedirected,
+                tooltip: 'Quiz state',
+                child: const Icon(Icons.stacked_bar_chart),
+              ),
+              const SizedBox(width: 16),
+              FloatingActionButton(
+                heroTag: 'addQuizButton',
+                onPressed: toRedirected,
+                tooltip: 'Add Quiz',
+                child: const Icon(Icons.add),
+              ),
+            ],
+          ),
+        ));
   }
 }
 
