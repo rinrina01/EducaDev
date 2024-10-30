@@ -30,7 +30,7 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
   @override
   Widget build(BuildContext context) {
     return MainLayout(
-        title: "Quiz",
+        title: "Quiz  ",
         child: Scaffold(
         ));
   }

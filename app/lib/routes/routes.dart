@@ -5,6 +5,7 @@ import 'package:app/pages/home_page.dart';
 import 'package:app/pages/my_account_page.dart';
 import 'package:app/pages/register_page.dart';
 import 'package:app/provider/route_provider.dart';
+import 'package:app/pages/play_quiz.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -51,11 +52,12 @@ class FluroRouterSetup {
       });
       final quizId = params['id']?.first;
       if (quizId != null) {
-        return Scaffold(body: Text("$quizId"));
+        return PlayQuizPage(quizId: quizId);
       } else {
-        return const Scaffold(
-          body: Center(child: Text("Quiz ID not found")),
-        );
+        return const HomePage();
+        // return const Scaffold(
+        //   body: Center(child: Text("Quiz ID not found")),
+        // );
       }
     },
   );
@@ -106,7 +108,7 @@ class FluroRouterSetup {
     );
 
   router.define(
-      "quiz-list/:id",
+      "quiz/:id",
       handler: _playQuizHandler,
   );
 

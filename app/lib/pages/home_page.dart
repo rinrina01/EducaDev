@@ -89,7 +89,7 @@ class QuizCard extends StatelessWidget {
     void toRedirected() {   // CHANGER LE TYPE DE LA VARIABLE
       FluroRouterSetup.router.navigateTo(
         context,
-        "admin/quiz-list/", // access specific quizz page
+        "quiz/$quizId", // access specific quizz page
       );
     }
 
