@@ -24,11 +24,23 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void toQuizListPage() {
+    FluroRouterSetup.router.navigateTo(
+      context,
+      "quiz-list",
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return const MainLayout(
+    return MainLayout(
       title: "Home",
-      child: Scaffold(),
+      child: Scaffold(
+          body: ElevatedButton(
+          onPressed: toQuizListPage,
+          child: Text('Voir les quiz.'),
+),
+      ),
     );
   }
 }

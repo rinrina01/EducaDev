@@ -2,6 +2,7 @@ import 'package:app/pages/admin/add_quiz_page.dart';
 import 'package:app/pages/admin/quiz_page.dart';
 import 'package:app/pages/login_page.dart';
 import 'package:app/pages/home_page.dart';
+import 'package:app/pages/quiz_list_page.dart';
 import 'package:app/pages/my_account_page.dart';
 import 'package:app/pages/register_page.dart';
 import 'package:app/provider/route_provider.dart';
@@ -39,6 +40,18 @@ class FluroRouterSetup {
         authProvider.redirectIfNotAuthenticated(context);
       });
       return const MyAccountPage();
+    },
+  );
+
+  static final Handler _quizListHandler = Handler(
+    handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
+      final authProvider = Provider.of<RouteProvider>(context!, listen: false);
+
+      // Utilise addPostFrameCallback pour la redirection après la construction initiale
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        authProvider.redirectIfNotAuthenticated(context);
+      });
+      return const QuizListPage();
     },
   );
 
@@ -85,6 +98,11 @@ class FluroRouterSetup {
     router.define(
       "my-account",
       handler: _myAccountHandler,
+    );
+
+    router.define(
+      "quiz-list",
+      handler: _quizListHandler,
     );
 
     router.define(
