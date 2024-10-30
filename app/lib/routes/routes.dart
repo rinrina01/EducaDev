@@ -1,5 +1,6 @@
 import 'package:app/pages/admin/add_quiz_page.dart';
 import 'package:app/pages/admin/quiz_page.dart';
+import 'package:app/pages/admin/view_score_page.dart';
 import 'package:app/pages/login_page.dart';
 import 'package:app/pages/home_page.dart';
 import 'package:app/pages/my_account_page.dart';
@@ -66,6 +67,18 @@ class FluroRouterSetup {
     },
   );
 
+  static final Handler _scoreViewHandler = Handler(
+    handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
+      final authProvider = Provider.of<RouteProvider>(context!, listen: false);
+
+      // Utilise addPostFrameCallback pour la redirection après la construction initiale
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        authProvider.redirectIfNotAdmin(context);
+      });
+      return ViewAllScoresPage();
+    },
+  );
+
   static void setupRouter() {
     router.define(
       "/",
@@ -95,6 +108,11 @@ class FluroRouterSetup {
     router.define(
       "admin/quiz/add",
       handler: _addQuizAdminHandler,
+    );
+
+    router.define(
+      "admin/view-score",
+      handler: _scoreViewHandler,
     );
   }
 }

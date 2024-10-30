@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/score_service.dart'; // Importez votre ScoreService ici
 
 class MyAccountPage extends StatefulWidget {
   const MyAccountPage({super.key});
@@ -12,6 +13,8 @@ class MyAccountPage extends StatefulWidget {
 class _MyAccountPageState extends State<MyAccountPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final ScoreService _scoreService = ScoreService(); // Instance de ScoreService
+
   User? user;
   String? userName;
   String? userFname;
@@ -19,6 +22,7 @@ class _MyAccountPageState extends State<MyAccountPage> {
   String? userMotiv;
   String? userMail;
   String? userAdress;
+  List<Map<String, dynamic>> userScores = []; // Liste des scores
 
   @override
   void initState() {
@@ -30,6 +34,7 @@ class _MyAccountPageState extends State<MyAccountPage> {
     user = _auth.currentUser;
     if (user != null) {
       await _fetchUserData();
+      await _loadUserScores(); // Charger les scores
     }
     setState(() {}); // Rebuild the UI
   }
@@ -37,7 +42,6 @@ class _MyAccountPageState extends State<MyAccountPage> {
   Future<void> _fetchUserData() async {
     try {
       DocumentSnapshot doc = await _firestore.collection('user').doc(user!.uid).get();
-      print('Document data: ${doc.data()}');
       if (doc.exists) {
         setState(() {
           userName = doc['name'];
@@ -52,6 +56,35 @@ class _MyAccountPageState extends State<MyAccountPage> {
       print('Error fetching user data: $e');
     }
   }
+
+  Future<void> _loadUserScores() async {
+    if (user != null) {
+      try {
+        userScores = await _scoreService.getUserScore(user!.uid);
+        setState(() {}); // Actualise l'affichage
+      } catch (e) {
+        print("Error loading user scores: $e");
+      }
+    }
+  }
+
+  Future<void> _addFixedScore() async {
+    if (user != null) {
+      try {
+        await _scoreService.addScore(user!.uid, 15, 20, 'HTML');
+        await _loadUserScores(); // Actualiser les scores après ajout
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Score ajouté avec succès!')),
+        );
+      } catch (e) {
+        print("Error adding score: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur lors de l\'ajout du score: $e')),
+        );
+      }
+    }
+  }
+
 
   Future<void> _updateUserAddress(String newAddress) async {
     if (user != null) {
@@ -197,33 +230,58 @@ class _MyAccountPageState extends State<MyAccountPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Account')),
-      body: Center(
-        child: user != null
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Welcome, ${userName ?? "User"} ${userFname ?? ""}!'),
-                  Text('Age: $userAge'),
-                  Text('Mail: $userMail'),
-                  Text('Address: $userAdress'),
-                  Text('Motivation: $userMotiv'),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _showUpdateAddressDialog, // Ouvrir le formulaire de mise à jour
-                    child: const Text('Change Address'),
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: const Text('Account')),
+    body: Center(
+      child: user != null
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Welcome, ${userName ?? "User"} ${userFname ?? ""}!'),
+                Text('Age: $userAge'),
+                Text('Mail: $userMail'),
+                Text('Address: $userAdress'),
+                Text('Motivation: $userMotiv'),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _showUpdateAddressDialog,
+                  child: const Text('Change Address'),
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: _showUpdateMotivationDialog,
+                  child: const Text('Change Motivation'),
+                ),
+                const SizedBox(height: 20),
+                Text('Scores:'),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: userScores.length,
+                    itemBuilder: (context, index) {
+                      final score = userScores[index];
+                      return ListTile(
+                        title: Text(score['category']),
+                        subtitle: Text(
+                          'Score: ${score['score']}/${score['quizLength']} - ${score['createdAt']}',
+                        ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _showUpdateMotivationDialog, // Ouvrir le formulaire de mise à jour de motivation
-                    child: const Text('Change Motivation'),
-                  ),
-                ],
-              )
-            : const Text('Please log in to view your account'),
-      ),
-    );
-  }
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () async {
+                    await _scoreService.addScore(user!.uid, 18, 20, 'HTML');
+                    await _loadUserScores(); // Recharger les scores après ajout
+                  },
+                  child: const Text('Add Sample Score'),
+                ),
+              ],
+            )
+          : const Text('Please log in to view your account'),
+    ),
+  );
+}
+
 }

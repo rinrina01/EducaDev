@@ -33,7 +33,7 @@ class MainLayout extends StatelessWidget {
             onPressed: () {
               FluroRouterSetup.router.navigateTo(
                 context,
-                "my-account",
+                "admin/view-score",
               );
             },
           ),
