@@ -28,6 +28,15 @@ class MainLayout extends StatelessWidget {
               );
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.account_circle),
+            onPressed: () {
+              FluroRouterSetup.router.navigateTo(
+                context,
+                "my-account",
+              );
+            },
+          ),
           if (authProvider.isAuthenticated)
             IconButton(
               icon: const Icon(Icons.logout),
