@@ -28,6 +28,15 @@ class MainLayout extends StatelessWidget {
               );
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.account_circle),
+            onPressed: () {
+              FluroRouterSetup.router.navigateTo(
+                context,
+                "admin/view-score",
+              );
+            },
+          ),
           if (authProvider.isAuthenticated)
             IconButton(
               icon: const Icon(Icons.logout),

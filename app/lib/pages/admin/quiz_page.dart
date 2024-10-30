@@ -28,6 +28,13 @@ class _QuizAdminPageState extends State<QuizAdminPage> {
     setState(() => _loadQuizzes());
   }
 
+  void _updateQuiz(String quizId) {
+    FluroRouterSetup.router.navigateTo(
+      context,
+      "admin/quiz/update/$quizId",
+    );
+  }
+
   void toRedirected() {
     FluroRouterSetup.router.navigateTo(
       context,
@@ -38,40 +45,42 @@ class _QuizAdminPageState extends State<QuizAdminPage> {
   @override
   Widget build(BuildContext context) {
     return MainLayout(
-        title: 'Quiz Admin',
-        child: Scaffold(
-          body: FutureBuilder<List<Map<String, dynamic>>>(
-            future: _quizzesFuture,
-            builder: (context, snapshot) {
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(child: Text('No quizzes available.'));
-              } else {
-                final quizzes = snapshot.data!;
+      title: 'Quiz Admin',
+      child: Scaffold(
+        body: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _quizzesFuture,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(child: Text('No quizzes available.'));
+            } else {
+              final quizzes = snapshot.data!;
 
-                return ListView.builder(
-                  itemCount: quizzes.length,
-                  itemBuilder: (context, index) {
-                    final quiz = quizzes[index];
-                    final quizId = quiz['id'] as String;
-                    final category = quiz['category'];
-                    final questionCount = (quiz['questions'] as List).length;
+              return ListView.builder(
+                itemCount: quizzes.length,
+                itemBuilder: (context, index) {
+                  final quiz = quizzes[index];
+                  final quizId = quiz['id'] as String;
+                  final category = quiz['category'];
+                  final questionCount = (quiz['questions'] as List).length;
 
-                    return QuizCardAdmin(
-                      category: category,
-                      questionCount: questionCount,
-                      onDelete: () => _deleteQuiz(quizId),
-                    );
-                  },
-                );
-              }
-            },
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: toRedirected,
-            child: const Icon(Icons.add),
-            tooltip: 'Add Quiz',
-          ),
-        ));
+                  return QuizCardAdmin(
+                    category: category,
+                    questionCount: questionCount,
+                    onDelete: () => _deleteQuiz(quizId),
+                    onUpdate: () => _updateQuiz(quizId),
+                  );
+                },
+              );
+            }
+          },
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: toRedirected,
+          tooltip: 'Add Quiz',
+          child: const Icon(Icons.add),
+        ),
+      ),
+    );
   }
 }
 
@@ -79,12 +88,14 @@ class QuizCardAdmin extends StatelessWidget {
   final String category;
   final int questionCount;
   final VoidCallback onDelete;
+  final VoidCallback onUpdate;
 
   const QuizCardAdmin({
     super.key,
     required this.category,
     required this.questionCount,
     required this.onDelete,
+    required this.onUpdate,
   });
 
   @override
@@ -94,12 +105,23 @@ class QuizCardAdmin extends StatelessWidget {
       child: ListTile(
         title: Text(category),
         subtitle: Text('$questionCount questions'),
-        trailing: IconButton(
-          icon: const Icon(
-            Icons.delete,
+        trailing: SizedBox(
+          width: 96,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: onDelete,
+                tooltip: 'Delete Quiz',
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: onUpdate,
+                tooltip: 'Update Quiz',
+              ),
+            ],
           ),
-          onPressed: onDelete,
-          tooltip: 'Delete Quiz',
         ),
       ),
     );

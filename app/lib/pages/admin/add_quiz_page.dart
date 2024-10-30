@@ -1,4 +1,5 @@
 import 'package:app/main_layout.dart';
+import 'package:app/services/quiz_service.dart';
 import 'package:flutter/material.dart';
 
 class AddQuizPage extends StatefulWidget {
@@ -11,49 +12,89 @@ class AddQuizPage extends StatefulWidget {
 class _AddQuizPageState extends State<AddQuizPage> {
   final TextEditingController _categoryController = TextEditingController();
   final List<Map<String, dynamic>> _cards = [];
-
   void _addCard() {
     setState(() {
       _cards.add({
-        'questionController': TextEditingController(),
+        'question': TextEditingController(),
         'answers': [TextEditingController()],
-        'correctController': TextEditingController(),
-        'timeController': TextEditingController(),
+        'correct': <int>{},
+        'time': TextEditingController(),
       });
     });
   }
 
-  void _saveQuiz() {
+  void _saveQuiz() async {
     if (_formKey.currentState!.validate()) {
-      String category = _categoryController.text.trim();
-      print("Category: $category");
+      final category = _categoryController.text.trim();
 
-      for (var i = 0; i < _cards.length; i++) {
-        String question = _cards[i]['questionController']?.text.trim() ?? '';
-        List<String> answers =
-            (_cards[i]['answers'] as List<TextEditingController>)
+      if (_cards.isNotEmpty) {
+        try {
+          final List<Map<String, dynamic>> questions = [];
+
+          for (var card in _cards) {
+            final questionText = card['question'].text.trim();
+
+            final answers = (card['answers'] as List<TextEditingController>)
                 .map((controller) => controller.text.trim())
                 .where((answer) => answer.isNotEmpty)
                 .toList();
-        String correctAnswer =
-            _cards[i]['correctController']?.text.trim() ?? '';
-        String timeLimit = _cards[i]['timeController']?.text.trim() ?? '';
 
-        print("Question ${i + 1}: $question");
-        print("Correct Answer: $correctAnswer");
-        print("Time Limit: $timeLimit");
-        for (var j = 0; j < answers.length; j++) {
-          print("  Answer ${j + 1}: ${answers[j]}");
+            if (answers.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                      'Error: Each question must have at least one answer.'),
+                ),
+              );
+              return;
+            }
+
+            final correctAnswers = (card['correct'] as Set<int>).toList();
+            print(correctAnswers);
+            if (correctAnswers.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                      'Error: Please select valid correct answers for each question.'),
+                ),
+              );
+              return;
+            }
+
+            final timeLimit = int.tryParse(card['time'].text.trim());
+
+            questions.add({
+              'question': questionText,
+              'answers': answers,
+              'correct': correctAnswers,
+              'time': timeLimit,
+            });
+          }
+
+          await QuizService().addQuiz(category, questions);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Quiz added successfully!')),
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error adding quiz: ${e.toString()}')),
+          );
         }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Error: Add at least one question to the quiz.')),
+        );
       }
     }
   }
 
   void _removeCard(int index) {
     setState(() {
-      _cards[index]['questionController'].dispose();
-      _cards[index]['correctController'].dispose();
-      _cards[index]['timeController'].dispose();
+      _cards[index]['question'].dispose();
+      _cards[index]['correct'].dispose();
+      _cards[index]['time'].dispose();
       for (var answerController in _cards[index]['answers']) {
         answerController.dispose();
       }
@@ -65,9 +106,9 @@ class _AddQuizPageState extends State<AddQuizPage> {
   void dispose() {
     _categoryController.dispose();
     for (var card in _cards) {
-      card['questionController'].dispose();
-      card['correctController'].dispose();
-      card['timeController'].dispose();
+      card['question'].dispose();
+      card['correct'].dispose();
+      card['time'].dispose();
       for (var answerController in card['answers']) {
         answerController.dispose();
       }
@@ -103,12 +144,51 @@ class _AddQuizPageState extends State<AddQuizPage> {
                     },
                   ),
                 ),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _cards.length,
+                  itemBuilder: (context, index) {
+                    return CardItem(
+                      questionController: _cards[index]['question'],
+                      answerControllers: _cards[index]['answers'],
+                      timeController: _cards[index]['time'],
+                      onAddAnswer: () {
+                        setState(() {
+                          _cards[index]['answers'].add(TextEditingController());
+                        });
+                      },
+                      onRemoveAnswer: (answerIndex) {
+                        setState(() {
+                          _cards[index]['answers'][answerIndex].dispose();
+                          _cards[index]['answers'].removeAt(answerIndex);
+                        });
+                      },
+                      onRemoveCard: () => _removeCard(index),
+                      onCorrectAnswersSelected: (selectedIndices) {
+                        setState(() {
+                          _cards[index]['correct'] = selectedIndices;
+                        });
+                      },
+                    );
+                  },
+                ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: ElevatedButton.icon(
-                    onPressed: _saveQuiz,
-                    icon: const Icon(Icons.save),
-                    label: const Text('Save Quiz'),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _addCard,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add Question'),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: _saveQuiz,
+                        icon: const Icon(Icons.save),
+                        label: const Text('Save Quiz'),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -120,26 +200,32 @@ class _AddQuizPageState extends State<AddQuizPage> {
   }
 }
 
-class CardItem extends StatelessWidget {
+class CardItem extends StatefulWidget {
   final TextEditingController questionController;
   final List<TextEditingController> answerControllers;
-  final TextEditingController correctController;
   final TextEditingController timeController;
-
   final VoidCallback onAddAnswer;
   final Function(int) onRemoveAnswer;
   final VoidCallback onRemoveCard;
+  final ValueChanged<Set<int>> onCorrectAnswersSelected;
 
   const CardItem({
     super.key,
     required this.questionController,
     required this.answerControllers,
-    required this.correctController,
     required this.timeController,
     required this.onAddAnswer,
     required this.onRemoveAnswer,
     required this.onRemoveCard,
+    required this.onCorrectAnswersSelected,
   });
+
+  @override
+  _CardItemState createState() => _CardItemState();
+}
+
+class _CardItemState extends State<CardItem> {
+  Set<int> selectedAnswerIndices = {};
 
   @override
   Widget build(BuildContext context) {
@@ -159,12 +245,12 @@ class CardItem extends StatelessWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete),
-                  onPressed: onRemoveCard,
+                  onPressed: widget.onRemoveCard,
                 ),
               ],
             ),
             TextFormField(
-              controller: questionController,
+              controller: widget.questionController,
               decoration: const InputDecoration(
                 labelText: 'Question',
                 border: OutlineInputBorder(),
@@ -177,16 +263,28 @@ class CardItem extends StatelessWidget {
               },
             ),
             const SizedBox(height: 10),
-            TextField(
-              controller: correctController,
-              decoration: const InputDecoration(
-                labelText: 'Correct Answer',
-                border: OutlineInputBorder(),
-              ),
+            Column(
+              children: widget.answerControllers.asMap().entries.map((entry) {
+                int index = entry.key;
+                return CheckboxListTile(
+                  title: Text('Answer ${index + 1}'),
+                  value: selectedAnswerIndices.contains(index),
+                  onChanged: (bool? value) {
+                    setState(() {
+                      if (value == true) {
+                        selectedAnswerIndices.add(index);
+                      } else {
+                        selectedAnswerIndices.remove(index);
+                      }
+                      widget.onCorrectAnswersSelected(selectedAnswerIndices);
+                    });
+                  },
+                );
+              }).toList(),
             ),
             const SizedBox(height: 10),
             TextFormField(
-              controller: timeController,
+              controller: widget.timeController,
               decoration: const InputDecoration(
                 labelText: 'Time Limit (seconds)',
                 border: OutlineInputBorder(),
@@ -205,32 +303,30 @@ class CardItem extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Column(
-              children: List.generate(answerControllers.length, (index) {
+              children: List.generate(widget.answerControllers.length, (index) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10.0),
                   child: Row(
                     children: [
                       Expanded(
-                          child: TextFormField(
-                        controller: answerControllers[index],
-                        decoration: InputDecoration(
-                          labelText: 'Answer ${index + 1}',
-                          border: const OutlineInputBorder(),
+                        child: TextFormField(
+                          controller: widget.answerControllers[index],
+                          decoration: InputDecoration(
+                            labelText: 'Answer ${index + 1}',
+                            border: const OutlineInputBorder(),
+                          ),
+                          maxLines: 1,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter an answer';
+                            }
+                            return null;
+                          },
                         ),
-                        maxLines: 1,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter an answer';
-                          }
-                          if (!RegExp(r'^[a-zA-Z0-9 ]+$').hasMatch(value)) {
-                            return 'Only letters and numbers are allowed';
-                          }
-                          return null;
-                        },
-                      )),
+                      ),
                       IconButton(
                         icon: const Icon(Icons.remove_circle),
-                        onPressed: () => onRemoveAnswer(index),
+                        onPressed: () => widget.onRemoveAnswer(index),
                       ),
                     ],
                   ),
@@ -240,7 +336,7 @@ class CardItem extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
-                onPressed: onAddAnswer,
+                onPressed: widget.onAddAnswer,
                 icon: const Icon(Icons.add),
                 label: const Text('Add Answer'),
               ),

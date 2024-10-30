@@ -53,7 +53,7 @@ class QuizService {
   Future<bool> quizByIdExists(String quizId) async {
     try {
       final docSnapshot = await _db.collection('quizzes').doc(quizId).get();
-        return (docSnapshot.exists);
+      return docSnapshot.exists;
     } catch (e) {
       print("Error retrieving quiz: $e");
       throw Exception("Failed to retrieve quiz");
