@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:graphic/graphic.dart'; 
+import 'package:graphic/graphic.dart';
 import '/services/score_service.dart';
 import '/services/user_service.dart';
 import '/services/graph_service.dart';
@@ -23,7 +23,7 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
   }
 
   Future<void> _fetchScoreDistribution() async {
-    final distribution = await _graphService.getScoreDistribution();
+    final distribution = await _graphService.getScoreDistribution('HTML');
     setState(() {
       _scoreDistribution = Future.value(distribution);
     });
@@ -47,33 +47,46 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
 
           return Column(
             children: [
-              // Graphique circulaire
+              // Graphique en barres avec graduations et style
               Expanded(
                 flex: 1,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Chart(
-  data: const [
-    { 'genre': 'Sports', 'sold': 275 },
-    { 'genre': 'Strategy', 'sold': 115 },
-    { 'genre': 'Action', 'sold': 120 },
-    { 'genre': 'Shooter', 'sold': 350 },
-    { 'genre': 'Other', 'sold': 150 },
-  ],
-  variables: {
-    'genre': Variable(
-      accessor: (Map map) => map['genre'] as String,
-    ),
-    'sold': Variable(
-      accessor: (Map map) => map['sold'] as num,
-    ),
-  },
-  marks: [IntervalMark()],
-  axes: [
-    Defaults.horizontalAxis,
-    Defaults.verticalAxis,
-  ],
-),
+                  child: Container(
+                    width: 350,
+                    height: 200,
+                    child: Stack(
+                      children: [ Chart(
+                        data: scoreCounts!.asMap().entries.map((entry) {
+                          return {
+                            'score': entry.key.toString(),
+                            'count': entry.value,
+                          };
+                        }).toList(),
+                        variables: {
+                          'score': Variable(
+                            accessor: (Map<String, dynamic> row) => row['score'] as String,
+                          ),
+                          'count': Variable(
+                            accessor: (Map<String, dynamic> row) => row['count'] as int,
+                          ),
+                        },
+                        marks: [
+                          IntervalMark(
+                            size: SizeEncode(value: 15), // Largeur des barres
+                            color: ColorEncode(value: Colors.blueAccent),
+                            elevation: ElevationEncode(value: 1),
+                            label: LabelEncode(
+                              encoder: (tuple) => Label(
+                                tuple['count'].toString(),
+                                ),
+                              ),
+                            ),     
+                        ],
+                      ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               // Liste des scores des utilisateurs
