@@ -1,5 +1,6 @@
 import 'package:app/pages/admin/add_quiz_page.dart';
 import 'package:app/pages/admin/quiz_page.dart';
+import 'package:app/pages/admin/update_quiz_page.dart';
 import 'package:app/pages/login_page.dart';
 import 'package:app/pages/home_page.dart';
 import 'package:app/pages/my_account_page.dart';
@@ -66,16 +67,20 @@ class FluroRouterSetup {
     },
   );
 
-  static final Handler _detailQuizAdminHandler = Handler(
+  static final Handler _updateQuizAdminHandler = Handler(
     handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
       final quizId = params['id']?.first;
       if (quizId != null) {
-        return Scaffold(body: Text(" $quizId"));
+        return UpdateQuizPage(quizId: quizId);
       } else {
-        return const Scaffold(
-          body: Center(child: Text("Quiz ID not found")),
+        FluroRouterSetup.router.navigateTo(
+          context!,
+          "admin/quiz",
         );
       }
+      return const Scaffold(
+        body: Text(''),
+      );
     },
   );
 
@@ -111,8 +116,8 @@ class FluroRouterSetup {
     );
 
     router.define(
-      "admin/quiz/:id",
-      handler: _detailQuizAdminHandler,
+      "admin/quiz/update/:id",
+      handler: _updateQuizAdminHandler,
     );
   }
 }
