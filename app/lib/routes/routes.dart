@@ -157,6 +157,7 @@ class FluroRouterSetup {
       handler: _scoreViewHandler,
     );
 
+
     router.define(
       "admin/quiz/update/:id",
       handler: _updateQuizAdminHandler,
