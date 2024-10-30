@@ -15,17 +15,27 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
   final UserService _userService = UserService();
 
   Future<List<int>>? _scoreDistribution;
+  Future<List<String>>? _categoriesFuture; // Future pour les catégories
+  String _selectedCategory = 'HTML'; // Valeur par défaut
 
   @override
   void initState() {
     super.initState();
     _fetchScoreDistribution();
+    _categoriesFuture = _scoreService.getAllCategories(); // Récupérer les catégories
   }
 
   Future<void> _fetchScoreDistribution() async {
-    final distribution = await _graphService.getScoreDistribution('HTML');
+    final distribution = await _graphService.getScoreDistribution(_selectedCategory);
     setState(() {
       _scoreDistribution = Future.value(distribution);
+    });
+  }
+
+  void _onCategoryChanged(String? newCategory) {
+    setState(() {
+      _selectedCategory = newCategory!;
+      _fetchScoreDistribution(); // Recharger les données avec la nouvelle catégorie
     });
   }
 
@@ -33,60 +43,84 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('All User Scores')),
-      body: FutureBuilder<List<int>>(
-        future: _scoreDistribution,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+      body: FutureBuilder<List<String>>(
+        future: _categoriesFuture, // Utiliser le future pour les catégories
+        builder: (context, categorySnapshot) {
+          if (categorySnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+          if (categorySnapshot.hasError) {
+            return Center(child: Text('Error: ${categorySnapshot.error}'));
           }
 
-          final scoreCounts = snapshot.data;
+          final categories = categorySnapshot.data;
 
           return Column(
             children: [
-              // Graphique en barres avec graduations et style
+              // RadioList des catégories
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: categories!.map((category) {
+                    return RadioListTile<String>(
+                      title: Text(category),
+                      value: category,
+                      groupValue: _selectedCategory,
+                      onChanged: _onCategoryChanged,
+                    );
+                  }).toList(),
+                ),
+              ),
+              // Afficher le graphique
               Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Container(
-                    width: 350,
-                    height: 200,
-                    child: Stack(
-                      children: [ Chart(
-                        data: scoreCounts!.asMap().entries.map((entry) {
-                          return {
-                            'score': entry.key.toString(),
-                            'count': entry.value,
-                          };
-                        }).toList(),
-                        variables: {
-                          'score': Variable(
-                            accessor: (Map<String, dynamic> row) => row['score'] as String,
-                          ),
-                          'count': Variable(
-                            accessor: (Map<String, dynamic> row) => row['count'] as int,
-                          ),
-                        },
-                        marks: [
-                          IntervalMark(
-                            size: SizeEncode(value: 15), // Largeur des barres
-                            color: ColorEncode(value: Colors.blueAccent),
-                            elevation: ElevationEncode(value: 1),
-                            label: LabelEncode(
-                              encoder: (tuple) => Label(
-                                tuple['count'].toString(),
+                child: FutureBuilder<List<int>>(
+                  future: _scoreDistribution,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+
+                    final scoreCounts = snapshot.data;
+
+                    return Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Container(
+                        width: 350,
+                        height: 200,
+                        child: Chart(
+                          data: scoreCounts!.asMap().entries.map((entry) {
+                            return {
+                              'score': entry.key.toString(),
+                              'count': entry.value,
+                            };
+                          }).toList(),
+                          variables: {
+                            'score': Variable(
+                              accessor: (Map<String, dynamic> row) => row['score'] as String,
+                            ),
+                            'count': Variable(
+                              accessor: (Map<String, dynamic> row) => row['count'] as int,
+                            ),
+                          },
+                          marks: [
+                            IntervalMark(
+                              size: SizeEncode(value: 15), // Largeur des barres
+                              color: ColorEncode(value: Colors.blueAccent),
+                              elevation: ElevationEncode(value: 1),
+                              label: LabelEncode(
+                                encoder: (tuple) => Label(
+                                  tuple['count'].toString(),
                                 ),
                               ),
-                            ),     
-                        ],
+                            ),
+                          ],
+                        ),
                       ),
-                      ],
-                    ),
-                  ),
+                    );
+                  },
                 ),
               ),
               // Liste des scores des utilisateurs

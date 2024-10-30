@@ -64,4 +64,26 @@ Future<List<Map<String, dynamic>>> getAllUserScore() async {
     throw Exception("Failed to fetch all scores");
   }
 }
+
+
+
+
+  Future<List<String>> getAllCategories() async {
+    try {
+      QuerySnapshot querySnapshot = await _db.collection('score').get();
+
+      // Utiliser un ensemble pour éviter les doublons
+      Set<String> categories = {};
+
+      for (var doc in querySnapshot.docs) {
+        String category = doc['category'];
+        categories.add(category);
+      }
+
+      return categories.toList(); // Retourner la liste des catégories
+    } catch (e) {
+      print("Error fetching categories: $e");
+      throw Exception("Failed to get categories");
+    }
+  }
 }
