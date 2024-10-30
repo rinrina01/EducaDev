@@ -1,9 +1,13 @@
+import 'package:app/pages/admin/add_quiz_page.dart';
+import 'package:app/pages/admin/quiz_page.dart';
 import 'package:app/pages/login_page.dart';
 import 'package:app/pages/home_page.dart';
 import 'package:app/pages/my_account_page.dart';
 import 'package:app/pages/register_page.dart';
+import 'package:app/provider/route_provider.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class FluroRouterSetup {
   static final FluroRouter router = FluroRouter();
@@ -28,7 +32,37 @@ class FluroRouterSetup {
 
   static final Handler _myAccountHandler = Handler(
     handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
+      final authProvider = Provider.of<RouteProvider>(context!, listen: false);
+
+      // Utilise addPostFrameCallback pour la redirection après la construction initiale
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        authProvider.redirectIfNotAuthenticated(context);
+      });
       return const MyAccountPage();
+    },
+  );
+
+  static final Handler _quizAdminHandler = Handler(
+    handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
+      final authProvider = Provider.of<RouteProvider>(context!, listen: false);
+
+      // Utilise addPostFrameCallback pour la redirection après la construction initiale
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        authProvider.redirectIfNotAdmin(context);
+      });
+      return const QuizAdminPage();
+    },
+  );
+
+  static final Handler _addQuizAdminHandler = Handler(
+    handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
+      final authProvider = Provider.of<RouteProvider>(context!, listen: false);
+
+      // Utilise addPostFrameCallback pour la redirection après la construction initiale
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        authProvider.redirectIfNotAdmin(context);
+      });
+      return const AddQuizPage();
     },
   );
 
@@ -51,6 +85,16 @@ class FluroRouterSetup {
     router.define(
       "my-account",
       handler: _myAccountHandler,
+    );
+
+    router.define(
+      "admin/quiz",
+      handler: _quizAdminHandler,
+    );
+
+    router.define(
+      "admin/quiz/add",
+      handler: _addQuizAdminHandler,
     );
   }
 }

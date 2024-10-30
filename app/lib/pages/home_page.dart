@@ -1,3 +1,4 @@
+import 'package:app/main_layout.dart';
 import 'package:app/routes/routes.dart';
 import 'package:flutter/material.dart';
 
@@ -16,15 +17,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void toRedirected1() {
+    FluroRouterSetup.router.navigateTo(
+      context,
+      "my-account",
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: ElevatedButton(
-          onPressed: toRedirected,
-          child: const Text('Go to Add Contacts'),
-        ),
-      ),
+    return const MainLayout(
+      title: "Home",
+      child: Scaffold(),
     );
   }
 }
