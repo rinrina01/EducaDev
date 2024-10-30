@@ -15,6 +15,10 @@ class _MyAccountPageState extends State<MyAccountPage> {
   User? user;
   String? userName;
   String? userFname;
+  String? userAge;
+  String? userMotiv;
+  String? userMail;
+  String? userAdress;
 
   @override
   void initState() {
@@ -33,10 +37,15 @@ class _MyAccountPageState extends State<MyAccountPage> {
   Future<void> _fetchUserData() async {
     try {
       DocumentSnapshot doc = await _firestore.collection('user').doc(user!.uid).get();
+      print('Document data: ${doc.data()}');
       if (doc.exists) {
         setState(() {
           userName = doc['name'];
           userFname = doc['firstName'];
+          userAge = doc['age'].toString();
+          userMotiv = doc['motivation'];
+          userMail = doc['email'];
+          userAdress = doc['address'];
         });
       }
     } catch (e) {
@@ -44,60 +53,147 @@ class _MyAccountPageState extends State<MyAccountPage> {
     }
   }
 
-  Future<void> _updateUserFname(String newFname) async {
+  Future<void> _updateUserAddress(String newAddress) async {
     if (user != null) {
       try {
         await _firestore.collection('user').doc(user!.uid).update({
-          'firstName': newFname,
+          'address': newAddress,
         });
         // Met à jour l'état local
         setState(() {
-          userFname = newFname;
+          userAdress = newAddress;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('First name updated to $newFname')),
+          SnackBar(content: Text('Address updated to $newAddress')),
         );
       } catch (e) {
-        print('Failed to update first name: $e');
+        print('Failed to update address: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update first name: $e')),
+          SnackBar(content: Text('Failed to update address: $e')),
         );
       }
     }
-  } 
+  }
 
-  void _showUpdateFnameDialog() {
-    final TextEditingController _fnameController = TextEditingController();
+  void _showUpdateAddressDialog() {
+    final TextEditingController _addressController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Update First Name'),
+          title: const Text('Update Address'),
           content: TextField(
-            controller: _fnameController,
-            decoration: InputDecoration(hintText: 'Enter new first name'),
+            controller: _addressController,
+            decoration: const InputDecoration(hintText: 'Enter new address'),
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
-                if (_fnameController.text.isNotEmpty) {
-                  _updateUserFname(_fnameController.text);
+                if (_addressController.text.isNotEmpty) {
+                  _updateUserAddress(_addressController.text);
                   Navigator.of(context).pop();
                 }
               },
-              child: Text('Update'),
+              child: const Text('Update'),
             ),
           ],
         );
       },
     );
+  }
+
+  // Fonction pour afficher le formulaire de motivation en pop-up
+  void _showUpdateMotivationDialog() {
+    String _selectedMotivation = userMotiv ?? "Poursuite d'études" ;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Choose your motivation and click on change"),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: [
+                RadioListTile(
+                  title: const Text("Poursuite d'études"),
+                  value: "Poursuite d'études",
+                  groupValue: _selectedMotivation,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedMotivation = value.toString();
+                    });
+                  },
+                ),
+                RadioListTile(
+                  title: const Text("Réorientation"),
+                  value: "Réorientation",
+                  groupValue: _selectedMotivation,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedMotivation = value.toString();
+                    });
+                  },
+                ),
+                RadioListTile(
+                  title: const Text("Reconversion"),
+                  value: "Reconversion",
+                  groupValue: _selectedMotivation,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedMotivation = value.toString();
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                _updateUserMotivation(_selectedMotivation); // Met à jour la motivation sélectionnée
+                Navigator.of(context).pop(); // Ferme la boîte de dialogue
+              },
+              child: const Text("Change"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Ferme la boîte de dialogue sans faire de changement
+              },
+              child: const Text("Annuler"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _updateUserMotivation(String newMotivation) async {
+    if (user != null) {
+      try {
+        await _firestore.collection('user').doc(user!.uid).update({
+          'motivation': newMotivation,
+        });
+        // Met à jour l'état local
+        setState(() {
+          userMotiv = newMotivation;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Motivation updated to $newMotivation')),
+        );
+      } catch (e) {
+        print('Failed to update motivation: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update motivation: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -109,15 +205,24 @@ class _MyAccountPageState extends State<MyAccountPage> {
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Welcome, ${userName ?? "User"} ${userFname ?? ""}!'), // Afficher le nom de l'utilisateur
+                  Text('Welcome, ${userName ?? "User"} ${userFname ?? ""}!'),
+                  Text('Age: $userAge'),
+                  Text('Mail: $userMail'),
+                  Text('Address: $userAdress'),
+                  Text('Motivation: $userMotiv'),
                   const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: _showUpdateFnameDialog, // Ouvrir le formulaire de mise à jour
-                    child: Text('Change First Name'),
+                    onPressed: _showUpdateAddressDialog, // Ouvrir le formulaire de mise à jour
+                    child: const Text('Change Address'),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _showUpdateMotivationDialog, // Ouvrir le formulaire de mise à jour de motivation
+                    child: const Text('Change Motivation'),
                   ),
                 ],
               )
-            : Text('Please log in to view your account'),
+            : const Text('Please log in to view your account'),
       ),
     );
   }
