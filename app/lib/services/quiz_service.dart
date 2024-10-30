@@ -33,6 +33,23 @@ class QuizService {
     }
   }
 
+  // Retrieve all quizzes with their document IDs
+  Future<Map<String, dynamic>> getQuizById(String quizId) async {
+    try {
+      final docSnapshot = await _db.collection('quizzes').doc(quizId).get();
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data() as Map<String, dynamic>;
+        data['id'] = docSnapshot.id;
+        return data;
+      } else {
+        throw Exception("Quiz not found");
+      }
+    } catch (e) {
+      print("Error retrieving quiz: $e");
+      throw Exception("Failed to retrieve quiz");
+    }
+  }
+
   // Update a quiz
   Future<void> updateQuiz(String quizId, String category,
       List<Map<String, dynamic>> questions) async {

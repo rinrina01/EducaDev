@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
   void toRedirected1() {
     FluroRouterSetup.router.navigateTo(
       context,
-      "my-account",
+      "admin/quiz/1234",
     );
   }
 

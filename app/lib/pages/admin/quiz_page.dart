@@ -53,7 +53,7 @@ class _QuizAdminPageState extends State<QuizAdminPage> {
                   itemBuilder: (context, index) {
                     final quiz = quizzes[index];
                     final quizId = quiz['id'] as String;
-                    final category = quiz['category'] ?? 'No category';
+                    final category = quiz['category'];
                     final questionCount = (quiz['questions'] as List).length;
 
                     return QuizCardAdmin(

@@ -86,6 +86,19 @@ class FluroRouterSetup {
     },
   );
 
+  static final Handler _detailQuizAdminHandler = Handler(
+    handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
+      final quizId = params['id']?.first;
+      if (quizId != null) {
+        return Scaffold(body: Text(" $quizId"));
+      } else {
+        return const Scaffold(
+          body: Center(child: Text("Quiz ID not found")),
+        );
+      }
+    },
+  );
+
   static void setupRouter() {
     router.define(
       "/",
@@ -120,6 +133,11 @@ class FluroRouterSetup {
     router.define(
       "admin/quiz/add",
       handler: _addQuizAdminHandler,
+    );
+
+    router.define(
+      "admin/quiz/:id",
+      handler: _detailQuizAdminHandler,
     );
   }
 }
