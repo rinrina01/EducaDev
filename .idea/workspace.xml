@@ -7,6 +7,7 @@
     <list default="true" id="9eb85462-dd0b-4396-8db3-6c013f1e52fe" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/lib/pages/play_quiz.dart" beforeDir="false" afterPath="$PROJECT_DIR$/app/lib/pages/play_quiz.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/lib/services/quiz_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/app/lib/services/quiz_service.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
