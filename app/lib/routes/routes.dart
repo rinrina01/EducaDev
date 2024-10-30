@@ -5,9 +5,9 @@ import 'package:app/pages/admin/update_quiz_page.dart';
 import 'package:app/pages/login_page.dart';
 import 'package:app/pages/home_page.dart';
 import 'package:app/pages/my_account_page.dart';
+import 'package:app/pages/play_quiz_page.dart';
 import 'package:app/pages/register_page.dart';
 import 'package:app/provider/route_provider.dart';
-import 'package:app/pages/play_quiz.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -156,7 +156,6 @@ class FluroRouterSetup {
       "admin/view-score",
       handler: _scoreViewHandler,
     );
-
 
     router.define(
       "admin/quiz/update/:id",
