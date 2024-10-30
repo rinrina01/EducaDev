@@ -1,3 +1,4 @@
+import 'package:app/main_layout.dart';
 import 'package:app/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,6 +14,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -24,35 +26,34 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Form submitted successfully!')),
+        const SnackBar(content: Text('Attempting to log in...')),
       );
 
       try {
-        final credential =
-            await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _emailController.text,
-          password: _passwordController.text,
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
         );
 
-        FluroRouterSetup.router.navigateTo(
-          context,
-          "/",
-        );
-
-        print("User registered: ${credential.user?.uid}");
+        FluroRouterSetup.router.navigateTo(context, "/");
       } on FirebaseAuthException catch (e) {
-        if (e.code == 'email-already-in-use') {
-          print('The email address is already in use by another account.');
+        String errorMessage;
+        if (e.code == 'user-not-found') {
+          errorMessage = 'No user found with this email.';
+        } else if (e.code == 'wrong-password') {
+          errorMessage = 'Incorrect password. Please try again.';
         } else if (e.code == 'invalid-email') {
-          print('The email address is not valid.');
-        } else if (e.code == 'weak-password') {
-          print('The password provided is too weak.');
+          errorMessage = 'The email address is not valid.';
         } else {
-          print('Failed with error code: ${e.code}');
-          print(e.message);
+          errorMessage = 'An error occurred: ${e.message}';
         }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
       } catch (e) {
-        print('An unknown error occurred. ${e}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('An unknown error occurred.')),
+        );
       }
     }
   }
@@ -78,14 +79,23 @@ class _LoginPageState extends State<LoginPage> {
             ),
             TextFormField(
               controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                suffixIcon: IconButton(
+                  icon: Icon(_obscurePassword
+                      ? Icons.visibility
+                      : Icons.visibility_off),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                ),
+              ),
+              obscureText: _obscurePassword,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter your password';
-                }
-                if (value.length < 6) {
-                  return 'Password must be at least 6 characters long';
                 }
                 return null;
               },
@@ -95,6 +105,13 @@ class _LoginPageState extends State<LoginPage> {
               onPressed: _submitForm,
               child: const Text('Submit'),
             ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () {
+                FluroRouterSetup.router.navigateTo(context, "register");
+              },
+              child: const Text("Don't have an account? Register here"),
+            ),
           ],
         ),
       ),
@@ -103,10 +120,9 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar:
-          AppBar(automaticallyImplyLeading: false, title: const Text('Login')),
-      body: Padding(
+    return MainLayout(
+      title: "Login",
+      child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: _buildForm(),
       ),
