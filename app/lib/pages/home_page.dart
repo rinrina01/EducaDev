@@ -20,15 +20,17 @@ class _HomePageState extends State<HomePage> {
   void toRedirected1() {
     FluroRouterSetup.router.navigateTo(
       context,
-      "my-account",
+      "admin/quiz/1234",
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return const MainLayout(
-      title: "Home",
-      child: Scaffold(),
-    );
+    return MainLayout(
+        title: "Home",
+        child: Scaffold(
+          body: ElevatedButton(
+              onPressed: toRedirected1, child: const Text("test")),
+        ));
   }
 }
