@@ -4,7 +4,7 @@ import 'package:app/services/quiz_service.dart';
 
 class Question extends StatefulWidget {
   late Future<Map<String, dynamic>> _quizzesFuture;
-  
+
   final String text;
   final List<String> options;
   final int correctAnswerIndex;
@@ -14,10 +14,9 @@ class Question extends StatefulWidget {
     required this.options,
     required this.correctAnswerIndex,
   });
-  
+
   @override
   _QuestionState createState() => _QuestionState();
 }
 
-class _QuestionState extends State<Question> {
-}
+class _QuestionState extends State<Question> {}

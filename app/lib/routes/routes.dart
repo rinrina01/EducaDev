@@ -45,7 +45,7 @@ class FluroRouterSetup {
     },
   );
 
- static final Handler _playQuizHandler = Handler(
+  static final Handler _playQuizHandler = Handler(
     handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
       final authProvider = Provider.of<RouteProvider>(context!, listen: false);
 
@@ -88,16 +88,16 @@ class FluroRouterSetup {
     },
   );
 
-
   static final Handler _scoreViewHandler = Handler(
-    handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
-      final authProvider = Provider.of<RouteProvider>(context!, listen: false);
+      handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
+    final authProvider = Provider.of<RouteProvider>(context!, listen: false);
 
-      // Utilise addPostFrameCallback pour la redirection après la construction initiale
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        authProvider.redirectIfNotAdmin(context);
-      });
-      return ViewAllScoresPage();
+    // Utilise addPostFrameCallback pour la redirection après la construction initiale
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      authProvider.redirectIfNotAdmin(context);
+    });
+    return ViewAllScoresPage();
+  });
 
   static final Handler _updateQuizAdminHandler = Handler(
     handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
@@ -113,7 +113,6 @@ class FluroRouterSetup {
       return const Scaffold(
         body: Text(''),
       );
-
     },
   );
 
@@ -138,10 +137,10 @@ class FluroRouterSetup {
       handler: _myAccountHandler,
     );
 
-  router.define(
+    router.define(
       "quiz/:id",
       handler: _playQuizHandler,
-  );
+    );
 
     router.define(
       "admin/quiz",
@@ -154,13 +153,13 @@ class FluroRouterSetup {
     );
 
     router.define(
-
       "admin/view-score",
       handler: _scoreViewHandler,
+    );
 
+    router.define(
       "admin/quiz/update/:id",
       handler: _updateQuizAdminHandler,
-
     );
   }
 }
