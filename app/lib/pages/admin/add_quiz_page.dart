@@ -103,12 +103,53 @@ class _AddQuizPageState extends State<AddQuizPage> {
                     },
                   ),
                 ),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _cards.length,
+                  itemBuilder: (context, index) {
+                    return CardItem(
+                      questionController: _cards[index]['questionController'],
+                      answerControllers: _cards[index]['answers'],
+                      correctController: _cards[index]['correctController'],
+                      timeController: _cards[index]['timeController'],
+                      onAddAnswer: () {
+                        setState(() {
+                          _cards[index]['answers'].add(TextEditingController());
+                        });
+                      },
+                      onRemoveAnswer: (answerIndex) {
+                        setState(() {
+                          _cards[index]['answers'][answerIndex].dispose();
+                          _cards[index]['answers'].removeAt(answerIndex);
+                        });
+                      },
+                      onRemoveCard: () => _removeCard(index),
+                      onSelectCorrectAnswer: (selectedAnswer) {
+                        setState(() {
+                          _cards[index]['correctController'].text =
+                              selectedAnswer;
+                        });
+                      },
+                    );
+                  },
+                ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: ElevatedButton.icon(
-                    onPressed: _saveQuiz,
-                    icon: const Icon(Icons.save),
-                    label: const Text('Save Quiz'),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _addCard,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add Question'),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: _saveQuiz,
+                        icon: const Icon(Icons.save),
+                        label: const Text('Save Quiz'),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -129,6 +170,7 @@ class CardItem extends StatelessWidget {
   final VoidCallback onAddAnswer;
   final Function(int) onRemoveAnswer;
   final VoidCallback onRemoveCard;
+  final ValueChanged<String> onSelectCorrectAnswer;
 
   const CardItem({
     super.key,
@@ -139,6 +181,7 @@ class CardItem extends StatelessWidget {
     required this.onAddAnswer,
     required this.onRemoveAnswer,
     required this.onRemoveCard,
+    required this.onSelectCorrectAnswer,
   });
 
   @override
@@ -177,13 +220,34 @@ class CardItem extends StatelessWidget {
               },
             ),
             const SizedBox(height: 10),
-            TextField(
-              controller: correctController,
-              decoration: const InputDecoration(
-                labelText: 'Correct Answer',
-                border: OutlineInputBorder(),
-              ),
-            ),
+            // DropdownButtonFormField<String>(
+            //   value: correctController.text.isEmpty
+            //       ? null
+            //       : correctController.text,
+            //   decoration: const InputDecoration(
+            //     labelText: 'Correct Answer',
+            //     border: OutlineInputBorder(),
+            //   ),
+            //   items: answerControllers
+            //       .where((controller) =>
+            //           controller.text.isNotEmpty) // Filter out empty answers
+            //       .map((controller) => DropdownMenuItem<String>(
+            //             value: controller.text,
+            //             child: Text(controller.text),
+            //           ))
+            //       .toList(),
+            //   onChanged: (value) {
+            //     if (value != null) {
+            //       onSelectCorrectAnswer(value);
+            //     }
+            //   },
+            //   validator: (value) {
+            //     if (value == null || value.isEmpty) {
+            //       return 'Please select the correct answer';
+            //     }
+            //     return null;
+            //   },
+            // ),
             const SizedBox(height: 10),
             TextFormField(
               controller: timeController,
@@ -221,9 +285,6 @@ class CardItem extends StatelessWidget {
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter an answer';
-                          }
-                          if (!RegExp(r'^[a-zA-Z0-9 ]+$').hasMatch(value)) {
-                            return 'Only letters and numbers are allowed';
                           }
                           return null;
                         },
