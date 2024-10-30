@@ -68,7 +68,6 @@ class FluroRouterSetup {
     },
   );
 
-
   static final Handler _scoreViewHandler = Handler(
     handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
       final authProvider = Provider.of<RouteProvider>(context!, listen: false);
@@ -78,6 +77,8 @@ class FluroRouterSetup {
         authProvider.redirectIfNotAdmin(context);
       });
       return ViewAllScoresPage();
+    },
+  );
 
   static final Handler _updateQuizAdminHandler = Handler(
     handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
@@ -93,7 +94,6 @@ class FluroRouterSetup {
       return const Scaffold(
         body: Text(''),
       );
-
     },
   );
 
@@ -129,13 +129,13 @@ class FluroRouterSetup {
     );
 
     router.define(
-
       "admin/view-score",
       handler: _scoreViewHandler,
+    );
 
+    router.define(
       "admin/quiz/update/:id",
       handler: _updateQuizAdminHandler,
-
     );
   }
 }
