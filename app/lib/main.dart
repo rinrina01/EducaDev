@@ -1,4 +1,5 @@
 import 'package:app/pages/home_page.dart';
+import 'package:app/provider/route_provider.dart';
 import 'package:app/routes/routes.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        Provider<int>.value(value: 0),
+        ChangeNotifierProvider<RouteProvider>(create: (_) => RouteProvider()),
       ],
       child: const MyApp(),
     ),
