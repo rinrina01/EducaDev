@@ -3,13 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class ScoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Add a new quiz
+  // Ajouter un nouveau score de quiz
   Future<void> addScore(
-      String userId, // ID de l'utilisateur
-      int score, // Score total du quiz
-      int quizLength, // Longueur du quiz (nombre de questions)
-      String category // Nom du quiz
-      ) async {
+    String userId, // ID de l'utilisateur
+    int score, // Score total du quiz
+    int quizLength, // Longueur du quiz (nombre de questions)
+    String category, // Nom du quiz
+  ) async {
     try {
       await _db.collection('score').add({
         'user': userId,
@@ -24,6 +24,7 @@ class ScoreService {
     }
   }
 
+  // Récupérer les scores d'un utilisateur spécifique
   Future<List<Map<String, dynamic>>> getUserScore(String userId) async {
     try {
       QuerySnapshot querySnapshot =
@@ -35,7 +36,7 @@ class ScoreService {
           'score': doc['score'],
           'quizLength': doc['quizLength'],
           'category': doc['category'],
-          'createdAt': doc['createdAt']?.toDate(), // Convertir en DateTime
+          'createdAt': doc['createdAt']?.toDate(), // Conversion en DateTime
         };
       }).toList();
 
@@ -46,6 +47,7 @@ class ScoreService {
     }
   }
 
+  // Récupérer tous les scores d'utilisateurs
   Future<List<Map<String, dynamic>>> getAllUserScore() async {
     try {
       QuerySnapshot querySnapshot = await _db
@@ -59,8 +61,7 @@ class ScoreService {
           'category': doc['category'],
           'score': doc['score'],
           'quizLength': doc['quizLength'],
-          'createdAt': (doc['createdAt'] as Timestamp?)
-              ?.toDate(), // Conversion de Timestamp en DateTime
+          'createdAt': (doc['createdAt'] as Timestamp?)?.toDate(), // Conversion de Timestamp en DateTime
         };
       }).toList();
     } catch (e) {
@@ -69,6 +70,31 @@ class ScoreService {
     }
   }
 
+  // Récupérer les scores par catégorie
+  Future<List<Map<String, dynamic>>> getScoreByCategory(String category) async {
+    try {
+      QuerySnapshot querySnapshot = await _db
+          .collection('score')
+          .where('category', isEqualTo: category)
+          .orderBy('createdAt', descending: false)
+          .get();
+
+      return querySnapshot.docs.map((doc) {
+        return {
+          'user': doc['user'],
+          'category': doc['category'],
+          'score': doc['score'],
+          'quizLength': doc['quizLength'],
+          'createdAt': (doc['createdAt'] as Timestamp?)?.toDate(), // Conversion de Timestamp en DateTime
+        };
+      }).toList();
+    } catch (e) {
+      print("Error fetching scores by category: $e");
+      throw Exception("Failed to fetch scores by category");
+    }
+  }
+
+  // Récupérer toutes les catégories
   Future<List<String>> getAllCategories() async {
     try {
       QuerySnapshot querySnapshot = await _db.collection('score').get();
@@ -77,8 +103,10 @@ class ScoreService {
       Set<String> categories = {};
 
       for (var doc in querySnapshot.docs) {
-        String category = doc['category'];
-        categories.add(category);
+        String? category = doc['category'];
+        if (category != null) {
+          categories.add(category);
+        }
       }
 
       return categories.toList(); // Retourner la liste des catégories

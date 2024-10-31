@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:graphic/graphic.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '/services/score_service.dart';
 import '/services/user_service.dart';
 import '/services/graph_service.dart';
@@ -15,30 +16,31 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
   final UserService _userService = UserService();
 
   Future<List<int>>? _scoreDistribution;
-  Future<List<String>>? _categoriesFuture; // Future pour les catégories
-  String _selectedCategory = 'HTML'; // Valeur par défaut
+  Future<List<String>>? _categoriesFuture;
+  Future<List<Map<String, dynamic>>>? _scoresFuture;
+  String _selectedCategory = 'HTML';
 
   @override
   void initState() {
     super.initState();
-    _fetchScoreDistribution();
-    _categoriesFuture =
-        _scoreService.getAllCategories(); // Récupérer les catégories
+    // Récupération initiale des catégories disponibles
+    _categoriesFuture = _scoreService.getAllCategories();
+    _updateCategoryData(_selectedCategory);
   }
 
-  Future<void> _fetchScoreDistribution() async {
-    final distribution =
-        await _graphService.getScoreDistribution(_selectedCategory);
+  // Méthode pour mettre à jour les données selon la catégorie
+  void _updateCategoryData(String category) {
     setState(() {
-      _scoreDistribution = Future.value(distribution);
+      _selectedCategory = category;
+      _scoresFuture = _scoreService.getScoreByCategory(category);
+      _scoreDistribution = _graphService.getScoreDistribution(category);
     });
   }
 
   void _onCategoryChanged(String? newCategory) {
-    setState(() {
-      _selectedCategory = newCategory!;
-      _fetchScoreDistribution(); // Recharger les données avec la nouvelle catégorie
-    });
+    if (newCategory != null) {
+      _updateCategoryData(newCategory);
+    }
   }
 
   @override
@@ -46,24 +48,25 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('All User Scores')),
       body: FutureBuilder<List<String>>(
-        future: _categoriesFuture, // Utiliser le future pour les catégories
+        future: _categoriesFuture,
         builder: (context, categorySnapshot) {
           if (categorySnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
           if (categorySnapshot.hasError) {
+            print("Error fetching categories: ${categorySnapshot.error}");
             return Center(child: Text('Error: ${categorySnapshot.error}'));
           }
 
-          final categories = categorySnapshot.data;
+          final categories = categorySnapshot.data ?? [];
 
           return Column(
             children: [
-              // RadioList des catégories
+              // Sélection de catégorie avec RadioListTile
               Container(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
-                  children: categories!.map((category) {
+                  children: categories.map((category) {
                     return RadioListTile<String>(
                       title: Text(category),
                       value: category,
@@ -73,7 +76,7 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
                   }).toList(),
                 ),
               ),
-              // Afficher le graphique
+              // Graphique pour la catégorie sélectionnée
               Expanded(
                 child: FutureBuilder<List<int>>(
                   future: _scoreDistribution,
@@ -82,73 +85,64 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
+                      print("Error fetching score distribution: ${snapshot.error}");
+                      return Center(child: Text('Error fetching score distribution: ${snapshot.error}'));
                     }
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(child: Text('No data available'));
+                      return const Center(child: Text('No data available for this category.'));
                     }
 
                     final scoreCounts = snapshot.data!;
-
                     return Padding(
                       padding: const EdgeInsets.all(16.0),
-                      child: Container(
-                        width: 350,
-                        height: 200,
-                        child: Chart(
-                          data: scoreCounts.asMap().entries.map((entry) {
-                            return {
-                              'score': entry.key.toString(),
-                              'count': entry.value,
-                            };
-                          }).toList(),
-                          variables: {
-                            'score': Variable(
-                              accessor: (Map<String, dynamic> row) =>
-                                  row['score'] as String,
+                      child: Chart(
+                        data: scoreCounts.asMap().entries.map((entry) {
+                          return {
+                            'score': entry.key.toString(),
+                            'count': entry.value,
+                          };
+                        }).toList(),
+                        variables: {
+                          'score': Variable(
+                            accessor: (Map<String, dynamic> row) => row['score'] as String,
+                          ),
+                          'count': Variable(
+                            accessor: (Map<String, dynamic> row) => row['count'] as int,
+                          ),
+                        },
+                        marks: [
+                          IntervalMark(
+                            size: SizeEncode(value: 15),
+                            color: ColorEncode(value: Colors.blueAccent),
+                            elevation: ElevationEncode(value: 1),
+                            label: LabelEncode(
+                              encoder: (tuple) => Label(tuple['count'].toString()),
                             ),
-                            'count': Variable(
-                              accessor: (Map<String, dynamic> row) =>
-                                  row['count'] as int,
-                            ),
-                          },
-                          marks: [
-                            IntervalMark(
-                              size: SizeEncode(value: 15), // Largeur des barres
-                              color: ColorEncode(value: Colors.blueAccent),
-                              elevation: ElevationEncode(value: 1),
-                              label: LabelEncode(
-                                encoder: (tuple) => Label(
-                                  tuple['count'].toString(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     );
                   },
                 ),
               ),
-              // Liste des scores des utilisateurs
+              // Liste des scores pour la catégorie sélectionnée
               Expanded(
                 flex: 2,
                 child: FutureBuilder<List<Map<String, dynamic>>>(
-                  future: _scoreService.getAllUserScore(),
+                  future: _scoresFuture,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
+                      print("Error fetching scores: ${snapshot.error}");
+                      return Center(child: Text('Error fetching scores: ${snapshot.error}'));
+                    }
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(child: Text('No scores available for this category.'));
                     }
 
-                    final scores = snapshot.data;
-
-                    if (scores == null || scores.isEmpty) {
-                      return const Center(child: Text('No scores available'));
-                    }
-
+                    final scores = snapshot.data!;
                     return ListView.builder(
                       itemCount: scores.length,
                       itemBuilder: (context, index) {
@@ -156,20 +150,20 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
                         return FutureBuilder<Map<String, dynamic>?>(
                           future: _userService.getUserData(scoreData['user']),
                           builder: (context, userSnapshot) {
-                            if (userSnapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Center(
-                                  child: CircularProgressIndicator());
+                            if (userSnapshot.connectionState == ConnectionState.waiting) {
+                              return const Center(child: CircularProgressIndicator());
                             }
                             if (userSnapshot.hasError) {
-                              return Center(
-                                  child: Text('Error: ${userSnapshot.error}'));
+                              print("Error fetching user data: ${userSnapshot.error}");
+                              return const Center(child: Text('User data unavailable'));
+                            }
+                            if (userSnapshot.data == null) {
+                              return const Center(child: Text('User data not found'));
                             }
 
-                            final userData = userSnapshot.data;
-                            final userName =
-                                userData?['firstName'] ?? 'Unknown';
-                            final userSurname = userData?['name'] ?? 'User';
+                            final userData = userSnapshot.data!;
+                            final userName = userData['firstName'] ?? 'Unknown';
+                            final userSurname = userData['name'] ?? 'User';
 
                             return Card(
                               margin: const EdgeInsets.all(8.0),
@@ -180,22 +174,14 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
                                   children: [
                                     Text(
                                       'User: $userName $userSurname',
-                                      style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold),
+                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                     ),
                                     Text(
                                       'Category: ${scoreData['category']}',
-                                      style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold),
+                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                     ),
-                                    Text(
-                                      'Score: ${scoreData['score']} / ${scoreData['quizLength']}',
-                                    ),
-                                    Text(
-                                      'Date: ${scoreData['createdAt'] ?? 'N/A'}',
-                                    ),
+                                    Text('Score: ${scoreData['score']} / ${scoreData['quizLength']}'),
+                                    Text('Date: ${scoreData['createdAt'] ?? 'N/A'}'),
                                   ],
                                 ),
                               ),
