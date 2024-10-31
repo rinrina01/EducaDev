@@ -21,9 +21,10 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
   late Future<Map<String, dynamic>> _quizzesFuture;
   late String category;
 
-  int currentQuestionIndex = 0; // states will be used to track the current question
+  int currentQuestionIndex =
+      0; // states will be used to track the current question
   Map<int, dynamic> userAnswers = {}; // Map of the answers the user selected
-  int timeLeft; // 30-second timer for each question
+  late int timeLeft; // 30-second timer for each question
   Timer? _timer;
 
   @override
@@ -48,10 +49,11 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
   }
 
   // timer method, with reset for each question
-  void _startCountDown() {
+  void _startCountDown() async {
     // reset timer for each question
+    final quizData = await _quizzesFuture;
     setState(() {
-      timeLeft = 30;
+      timeLeft = quizData['questions'][currentQuestionIndex]['time'];
     });
 
     _timer?.cancel(); // cancel any existing timer
@@ -68,8 +70,9 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
   }
 
   void nextQuestion() {
-    final totalQuestions = _quizzesFuture.then((data) => data['questions'].length);
-    
+    final totalQuestions =
+        _quizzesFuture.then((data) => data['questions'].length);
+
     totalQuestions.then((totalQuestions) {
       if (currentQuestionIndex < totalQuestions - 1) {
         // ensure all questions are displayed to the user successively
@@ -100,18 +103,22 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
         if (currentQuestion['correct'].length == 1) {
           // check if the userAnswer is correct
           // single correct answer case (RADIOHEAD)
-          if (userAnswer == currentQuestion['answers'][currentQuestion['correct'][0]]) {
+          if (userAnswer ==
+              currentQuestion['answers'][currentQuestion['correct'][0]]) {
             // check if the userAnswer is the answer to the current question selected with index of the ONLY possible correct answer
             correctAnswersCount++;
           }
         } else {
           // multiple correct answers (CHECKBOX)
           final correctIndexes = currentQuestion['correct'];
-          final correctAnswers = correctIndexes.map((index) => currentQuestion['answers'][index]).toList();
+          final correctAnswers = correctIndexes
+              .map((index) => currentQuestion['answers'][index])
+              .toList();
           // adds to new list only the right answers by selecting them with the indexes of the correct answers
 
           // check if userAnswer contains all correct answers
-          if (correctAnswers.every((answer) => (userAnswer as List<dynamic>).contains(answer))) {
+          if (correctAnswers.every(
+              (answer) => (userAnswer as List<dynamic>).contains(answer))) {
             correctAnswersCount++; // increment only if the user has ALL answers right
           }
         }
@@ -127,7 +134,8 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
     // calculate percentage score
     print(totalQuestions);
     print(correctAnswersCount);
-    print(((correctAnswersCount / totalQuestions) * 100).toInt().toString() + "%");
+    print(((correctAnswersCount / totalQuestions) * 100).toInt().toString() +
+        "%");
 
     // Navigate to results page (create your results page)
     FluroRouterSetup.router.navigateTo(context, "/");
@@ -141,7 +149,8 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // while fetching
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()), // loading animation
+            body:
+                Center(child: CircularProgressIndicator()), // loading animation
           );
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           // if not data in quiz
@@ -157,14 +166,17 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
           );
         } else {
           // if everything working
-          final List<dynamic> questions = snapshot.data!['questions']; // get questions/answers
-          final currentQuestion = questions[currentQuestionIndex]; // get question based on the current question index
+          final List<dynamic> questions =
+              snapshot.data!['questions']; // get questions/answers
+          final currentQuestion = questions[
+              currentQuestionIndex]; // get question based on the current question index
           category = snapshot.data!['category'];
 
           return Scaffold(
             appBar: AppBar(
               automaticallyImplyLeading: false,
-              title: Text("Question ${currentQuestionIndex + 1}/${questions.length}"), // avoid writing "question 0" on user-destined quiz
+              title: Text(
+                  "Question ${currentQuestionIndex + 1}/${questions.length}"), // avoid writing "question 0" on user-destined quiz
             ),
             body: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -175,11 +187,14 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
                       style: const TextStyle(fontSize: 18, color: Colors.red)),
                   const SizedBox(height: 20),
                   Text(currentQuestion['question'],
-                      style: const TextStyle(fontSize: 18)), // get String question for user
+                      style: const TextStyle(
+                          fontSize: 18)), // get String question for user
                   const SizedBox(height: 20),
-                  ...List<Widget>.generate(currentQuestion['answers'].length, (index) {
+                  ...List<Widget>.generate(currentQuestion['answers'].length,
+                      (index) {
                     // loop to display all answer options
-                    final answer = currentQuestion['answers'][index]; // get answers one by one
+                    final answer = currentQuestion['answers']
+                        [index]; // get answers one by one
                     if (currentQuestion['correct'].length == 1) {
                       // RadioListTile -> only one correct answer
                       return RadioListTile(
@@ -196,7 +211,8 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
                       // CheckboxListTile -> multiple correct answers
                       return CheckboxListTile(
                         title: Text(answer),
-                        value: (userAnswers[currentQuestionIndex] ?? []).contains(answer),
+                        value: (userAnswers[currentQuestionIndex] ?? [])
+                            .contains(answer),
                         onChanged: (bool? checked) {
                           setState(() {
                             if (checked == true) {
