@@ -5,6 +5,7 @@ import 'package:app/pages/admin/update_quiz_page.dart';
 import 'package:app/pages/login_page.dart';
 import 'package:app/pages/home_page.dart';
 import 'package:app/pages/my_account_page.dart';
+import 'package:app/pages/play_quiz_page.dart';
 import 'package:app/pages/register_page.dart';
 import 'package:app/provider/route_provider.dart';
 import 'package:fluro/fluro.dart';
@@ -44,6 +45,25 @@ class FluroRouterSetup {
     },
   );
 
+  static final Handler _playQuizHandler = Handler(
+    handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
+      final authProvider = Provider.of<RouteProvider>(context!, listen: false);
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        authProvider.redirectIfNotAuthenticated(context);
+      });
+      final quizId = params['id']?.first;
+      if (quizId != null) {
+        return PlayQuizPage(quizId: quizId);
+      } else {
+        return const HomePage();
+        // return const Scaffold(
+        //   body: Center(child: Text("Quiz ID not found")),
+        // );
+      }
+    },
+  );
+
   static final Handler _quizAdminHandler = Handler(
     handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
       final authProvider = Provider.of<RouteProvider>(context!, listen: false);
@@ -69,16 +89,15 @@ class FluroRouterSetup {
   );
 
   static final Handler _scoreViewHandler = Handler(
-    handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
-      final authProvider = Provider.of<RouteProvider>(context!, listen: false);
+      handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
+    final authProvider = Provider.of<RouteProvider>(context!, listen: false);
 
-      // Utilise addPostFrameCallback pour la redirection après la construction initiale
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        authProvider.redirectIfNotAdmin(context);
-      });
-      return ViewAllScoresPage();
-    },
-  );
+    // Utilise addPostFrameCallback pour la redirection après la construction initiale
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      authProvider.redirectIfNotAdmin(context);
+    });
+    return ViewAllScoresPage();
+  });
 
   static final Handler _updateQuizAdminHandler = Handler(
     handlerFunc: (BuildContext? context, Map<String, List<String>> params) {
@@ -116,6 +135,11 @@ class FluroRouterSetup {
     router.define(
       "my-account",
       handler: _myAccountHandler,
+    );
+
+    router.define(
+      "quiz/:id",
+      handler: _playQuizHandler,
     );
 
     router.define(
