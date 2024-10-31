@@ -36,7 +36,7 @@
 
 2.```bash
    cd educadev
-
+```
 
 3.```bash
    flutter pub get
