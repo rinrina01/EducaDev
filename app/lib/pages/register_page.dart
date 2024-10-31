@@ -43,11 +43,12 @@ class _RegisterPageState extends State<RegisterPage> {
       );
 
       try {
-        final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        final credential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
-        
+
         if (credential.user != null) {
           FirebaseFirestore db = FirebaseFirestore.instance;
           final user = <String, dynamic>{
@@ -55,7 +56,8 @@ class _RegisterPageState extends State<RegisterPage> {
             "firstName": _firstNameController.text.trim(),
             "age": int.parse(_ageController.text.trim()),
             "address": _addressController.text.trim(),
-            "motivation": _selectedMotivation, // Enregistre la motivation choisie
+            "motivation":
+                _selectedMotivation, // Enregistre la motivation choisie
             "email": _emailController.text.trim(),
             "userId": credential.user!.uid,
             "role": "user"
@@ -67,7 +69,8 @@ class _RegisterPageState extends State<RegisterPage> {
         // Gestion des erreurs d'inscription
         String errorMessage;
         if (e.code == 'email-already-in-use') {
-          errorMessage = 'The email address is already in use by another account.';
+          errorMessage =
+              'The email address is already in use by another account.';
         } else if (e.code == 'invalid-email') {
           errorMessage = 'The email address is not valid.';
         } else if (e.code == 'weak-password') {
@@ -75,7 +78,8 @@ class _RegisterPageState extends State<RegisterPage> {
         } else {
           errorMessage = 'Registration failed: ${e.message}';
         }
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(errorMessage)));
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('An unknown error occurred.')),
@@ -87,7 +91,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget _buildForm() {
     return Form(
       key: _formKey,
-      child: Center(
+      child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -157,7 +161,9 @@ class _RegisterPageState extends State<RegisterPage> {
               decoration: InputDecoration(
                 labelText: 'Password',
                 suffixIcon: IconButton(
-                  icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                  icon: Icon(_obscurePassword
+                      ? Icons.visibility
+                      : Icons.visibility_off),
                   onPressed: () {
                     setState(() {
                       _obscurePassword = !_obscurePassword;
