@@ -1,0 +1,138 @@
+{
+  "quizzes": [
+    {
+      "category": "Frontend",
+      "createdAt": "2024-10-31T10:00:00Z",
+
+      "questions": [
+        {
+          "question": "Qu'est-ce qu'un framework JavaScript pour construire des interfaces utilisateur ?",
+          "answers": ["React", "Django", "Laravel", "Vue.js"],
+          "correct": [0, 3],
+          "time": 60
+        },
+        {
+          "question": "Lequel de ces éléments est utilisé pour styliser une page web ?",
+          "answers": ["HTML", "CSS", "Sass", "JavaScript"],
+          "correct": [1, 2],
+          "time": 30
+        },
+        {
+          "question": "Quels langages sont utilisés pour le développement frontend ?",
+          "answers": ["HTML", "CSS", "Python", "JavaScript"],
+          "correct": [0, 1, 3],
+          "time": 120
+        }
+      ]
+    },
+    {
+      "category": "Backend",
+      "createdAt": "2024-10-31T10:00:00Z",
+
+      "questions": [
+        {
+          "question": "Lequel de ces langages est principalement utilisé pour le backend ?",
+          "answers": ["JavaScript", "PHP", "Python", "HTML"],
+          "correct": [1, 2],
+          "time": 30
+        },
+        {
+          "question": "Quels frameworks sont populaires pour le développement backend ?",
+          "answers": ["React", "Symfony", "Laravel", "Vue"],
+          "correct": [1, 2],
+          "time": 15
+        },
+        {
+          "question": "Quel est le rôle principal d'une base de données ?",
+          "answers": [
+            "Stocker des données",
+            "Styliser une page",
+            "Optimiser le CSS",
+            "Créer des animations"
+          ],
+          "correct": [0],
+          "time": 30
+        }
+      ]
+    },
+    {
+      "category": "Base de données",
+      "createdAt": "2024-10-31T10:00:00Z",
+
+      "questions": [
+        {
+          "question": "Lequel de ces choix est une base de données NoSQL ?",
+          "answers": ["MySQL", "PostgreSQL", "MongoDB", "Firebase"],
+          "correct": [2, 3],
+          "time": 30
+        },
+        {
+          "question": "Quels sont des systèmes de gestion de bases de données relationnelles ?",
+          "answers": ["MySQL", "PostgreSQL", "MongoDB", "SQLite"],
+          "correct": [0, 1, 3],
+          "time": 100
+        },
+        {
+          "question": "Firebase est une base de données orientée vers ?",
+          "answers": ["Documents", "Objets", "Relationnelle", "Réseau"],
+          "correct": [0],
+          "time": 30
+        }
+      ]
+    },
+    {
+      "category": "Outils de développement",
+      "createdAt": "2024-10-31T10:00:00Z",
+      "questions": [
+        {
+          "question": "Quel système de contrôle de version est utilisé pour gérer les modifications de code ?",
+          "answers": ["Git", "Docker", "SVN", "Photoshop"],
+          "correct": [0, 2],
+          "time": 200
+        },
+        {
+          "question": "Docker est principalement utilisé pour ?",
+          "answers": [
+            "Développer des interfaces",
+            "Conteneuriser des applications",
+            "Créer des bases de données",
+            "Automatiser les déploiements"
+          ],
+          "correct": [1, 3],
+          "time": 30
+        },
+        {
+          "question": "Quelle plateforme de gestion de code est utilisée pour collaborer sur des projets ?",
+          "answers": ["GitHub", "GitLab", "AWS", "Bitbucket"],
+          "correct": [0, 1, 3],
+          "time": 300
+        }
+      ]
+    },
+    {
+      "category": "Sécurité",
+      "createdAt": "2024-10-31T10:00:00Z",
+
+      "questions": [
+        {
+          "question": "Quelle technique protège les mots de passe en les transformant de manière irréversible ?",
+          "answers": ["Cryptage", "Hashage", "Encodage", "Compression"],
+          "correct": [1],
+          "time": 333
+        },
+        {
+          "question": "Quelles sont des menaces de sécurité courantes pour les applications web ?",
+          "answers": ["Phishing", "XSS", "DDoS", "Injection SQL"],
+          "correct": [1, 2, 3],
+          "time": 400
+        },
+        {
+          "question": "Lequel de ces termes décrit une attaque où les requêtes sont envoyées en grand nombre pour saturer un serveur ?",
+          "answers": ["Phishing", "XSS", "DDoS", "Injection SQL"],
+          "correct": [2],
+          "time": 100
+        }
+      ]
+    }
+  ]
+}

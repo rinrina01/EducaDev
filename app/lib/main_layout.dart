@@ -56,7 +56,6 @@ class MainLayout extends StatelessWidget {
       body: child,
       bottomNavigationBar: BottomNavigationBar(
         onTap: (index) {
-          print(authProvider.isAdmin);
           switch (index) {
             case 0:
               FluroRouterSetup.router
@@ -65,18 +64,17 @@ class MainLayout extends StatelessWidget {
             case 1:
               if (authProvider.isAdmin) {
                 FluroRouterSetup.router
-                    .navigateTo(context, "admin/quiz", clearStack: true);
-                break;
+                    .navigateTo(context, 'admin/quiz', clearStack: true);
+              } else {
+                FluroRouterSetup.router.navigateTo(
+                  context,
+                  'my-account',
+                );
               }
-              FluroRouterSetup.router.navigateTo(
-                context,
-                "my-account",
-              );
-
               break;
           }
         },
-        items: <BottomNavigationBarItem>[
+        items: [
           const BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
