@@ -50,10 +50,7 @@ class ScoreService {
   // Récupérer tous les scores d'utilisateurs
   Future<List<Map<String, dynamic>>> getAllUserScore() async {
     try {
-      QuerySnapshot querySnapshot = await _db
-          .collection('score')
-          .orderBy('createdAt', descending: false)
-          .get();
+      QuerySnapshot querySnapshot = await _db.collection('score').get();
 
       return querySnapshot.docs.map((doc) {
         return {
@@ -61,7 +58,8 @@ class ScoreService {
           'category': doc['category'],
           'score': doc['score'],
           'quizLength': doc['quizLength'],
-          'createdAt': (doc['createdAt'] as Timestamp?)?.toDate(), // Conversion de Timestamp en DateTime
+          'createdAt': (doc['createdAt'] as Timestamp?)
+              ?.toDate(), // Conversion de Timestamp en DateTime
         };
       }).toList();
     } catch (e) {
@@ -76,7 +74,6 @@ class ScoreService {
       QuerySnapshot querySnapshot = await _db
           .collection('score')
           .where('category', isEqualTo: category)
-          .orderBy('createdAt', descending: false)
           .get();
 
       return querySnapshot.docs.map((doc) {
@@ -85,7 +82,8 @@ class ScoreService {
           'category': doc['category'],
           'score': doc['score'],
           'quizLength': doc['quizLength'],
-          'createdAt': (doc['createdAt'] as Timestamp?)?.toDate(), // Conversion de Timestamp en DateTime
+          'createdAt': (doc['createdAt'] as Timestamp?)
+              ?.toDate(), // Conversion de Timestamp en DateTime
         };
       }).toList();
     } catch (e) {
