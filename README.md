@@ -32,19 +32,19 @@
 1. Clone the repository:
    ```bash
    git clone https://github.com/yourusername/educadev.git
-```
+
 
 2.```bash
    cd educadev
-```
+
 
 3.```bash
    flutter pub get
-```
+
 4. Set up Firebase for your project. Follow the Firebase setup guide.
 
 5.```bash
 flutter run
-```
+
 
 
