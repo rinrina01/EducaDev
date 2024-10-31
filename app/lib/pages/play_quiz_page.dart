@@ -153,78 +153,75 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
               currentQuestionIndex]; // get question based on the current question index
           category = snapshot.data!['category'];
 
-          return MainLayout(
-            title: "Quiz",
-            child: Scaffold(
-              appBar: AppBar(
-                  automaticallyImplyLeading: false,
-                  title: Text(
-                      "Question ${currentQuestionIndex + 1}/$totalQuestions")), // avoid writing "question 0" on user-destined quiz
-              body: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Time left: ${timeLeft.toString()}", // display timer
-                        style: TextStyle(fontSize: 18, color: Colors.red)),
-                    const SizedBox(height: 20),
-                    Text(currentQuestion['question'],
-                        style: TextStyle(
-                            fontSize: 18)), // get String question for user
-                    const SizedBox(height: 20),
+          return Scaffold(
+            appBar: AppBar(
+                automaticallyImplyLeading: false,
+                title: Text(
+                    "Question ${currentQuestionIndex + 1}/$totalQuestions")), // avoid writing "question 0" on user-destined quiz
+            body: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Time left: ${timeLeft.toString()}", // display timer
+                      style: TextStyle(fontSize: 18, color: Colors.red)),
+                  const SizedBox(height: 20),
+                  Text(currentQuestion['question'],
+                      style: TextStyle(
+                          fontSize: 18)), // get String question for user
+                  const SizedBox(height: 20),
 
-                    ...List<Widget>.generate(currentQuestion['answers'].length,
-                        (index) {
-                      // loop to display all answer options
-                      final answer = currentQuestion['answers']
-                          [index]; // get answers one by one
-                      if (currentQuestion['correct'].length == 1) {
-                        // RadioListTile -> only one correct answer
-                        return RadioListTile(
-                          title: Text(answer),
-                          value: answer,
-                          groupValue: userAnswers[currentQuestionIndex],
-                          onChanged: (value) {
-                            setState(() {
-                              userAnswers[currentQuestionIndex] = value;
-                            });
-                          },
-                        );
-                      } else {
-                        // CheckboxListTile -> multiple correct answers
-                        return CheckboxListTile(
-                          title: Text(answer),
-                          value: (userAnswers[currentQuestionIndex] ?? [])
-                              .contains(answer),
-                          onChanged: (bool? checked) {
-                            setState(() {
-                              if (checked == true) {
-                                // Add answer to selected list if checked
-                                userAnswers[currentQuestionIndex] = [
-                                  ...(userAnswers[currentQuestionIndex] ?? []),
-                                  answer
-                                ];
-                              } else {
-                                // Remove answer from selected list if unchecked
-                                userAnswers[currentQuestionIndex] = [
-                                  ...(userAnswers[currentQuestionIndex] ?? [])
-                                ]..remove(answer);
-                              }
-                            });
-                          },
-                        );
-                      }
-                    }),
+                  ...List<Widget>.generate(currentQuestion['answers'].length,
+                      (index) {
+                    // loop to display all answer options
+                    final answer = currentQuestion['answers']
+                        [index]; // get answers one by one
+                    if (currentQuestion['correct'].length == 1) {
+                      // RadioListTile -> only one correct answer
+                      return RadioListTile(
+                        title: Text(answer),
+                        value: answer,
+                        groupValue: userAnswers[currentQuestionIndex],
+                        onChanged: (value) {
+                          setState(() {
+                            userAnswers[currentQuestionIndex] = value;
+                          });
+                        },
+                      );
+                    } else {
+                      // CheckboxListTile -> multiple correct answers
+                      return CheckboxListTile(
+                        title: Text(answer),
+                        value: (userAnswers[currentQuestionIndex] ?? [])
+                            .contains(answer),
+                        onChanged: (bool? checked) {
+                          setState(() {
+                            if (checked == true) {
+                              // Add answer to selected list if checked
+                              userAnswers[currentQuestionIndex] = [
+                                ...(userAnswers[currentQuestionIndex] ?? []),
+                                answer
+                              ];
+                            } else {
+                              // Remove answer from selected list if unchecked
+                              userAnswers[currentQuestionIndex] = [
+                                ...(userAnswers[currentQuestionIndex] ?? [])
+                              ]..remove(answer);
+                            }
+                          });
+                        },
+                      );
+                    }
+                  }),
 
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () => nextQuestion(totalQuestions, questions),
-                      child: Text(currentQuestionIndex < totalQuestions - 1
-                          ? 'Next'
-                          : 'Submit'),
-                    ),
-                  ],
-                ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => nextQuestion(totalQuestions, questions),
+                    child: Text(currentQuestionIndex < totalQuestions - 1
+                        ? 'Next'
+                        : 'Submit'),
+                  ),
+                ],
               ),
             ),
           );
