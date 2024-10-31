@@ -36,7 +36,7 @@
 
 4. Set up Firebase for your project. Follow the Firebase setup guide.
 
-5.```bash
+
 flutter run
 
 
