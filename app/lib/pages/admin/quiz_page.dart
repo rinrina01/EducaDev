@@ -35,13 +35,6 @@ class _QuizAdminPageState extends State<QuizAdminPage> {
     );
   }
 
-  void toRedirected() {
-    FluroRouterSetup.router.navigateTo(
-      context,
-      "admin/quiz/add",
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return MainLayout(
@@ -79,14 +72,24 @@ class _QuizAdminPageState extends State<QuizAdminPage> {
             children: [
               FloatingActionButton(
                 heroTag: 'quizStateButton',
-                onPressed: toRedirected,
+                onPressed: () {
+                  FluroRouterSetup.router.navigateTo(
+                    context,
+                    "admin/view-score",
+                  );
+                },
                 tooltip: 'Quiz state',
                 child: const Icon(Icons.stacked_bar_chart),
               ),
               const SizedBox(width: 16),
               FloatingActionButton(
                 heroTag: 'addQuizButton',
-                onPressed: toRedirected,
+                onPressed: () {
+                  FluroRouterSetup.router.navigateTo(
+                    context,
+                    "admin/quiz/add",
+                  );
+                },
                 tooltip: 'Add Quiz',
                 child: const Icon(Icons.add),
               ),
