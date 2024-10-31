@@ -81,7 +81,7 @@ class MainLayout extends StatelessWidget {
             icon: Icon(Icons.home),
             label: 'Home',
           ),
-          if (authProvider.isAdmin)
+          if (authProvider.isAdmin && authProvider.isAuthenticated)
             const BottomNavigationBarItem(
               icon: Icon(Icons.dashboard),
               label: 'Dashboard',
