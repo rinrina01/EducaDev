@@ -41,7 +41,8 @@ class _MyAccountPageState extends State<MyAccountPage> {
 
   Future<void> _fetchUserData() async {
     try {
-      DocumentSnapshot doc = await _firestore.collection('user').doc(user!.uid).get();
+      DocumentSnapshot doc =
+          await _firestore.collection('user').doc(user!.uid).get();
       if (doc.exists) {
         setState(() {
           userName = doc['name'];
@@ -60,7 +61,7 @@ class _MyAccountPageState extends State<MyAccountPage> {
   Future<void> _loadUserScores() async {
     if (user != null) {
       try {
-        userScores = await _scoreService.getUserScore(user!.uid);
+        userScores = await ScoreService().getUserScore(user!.uid);
         setState(() {}); // Actualise l'affichage
       } catch (e) {
         print("Error loading user scores: $e");
@@ -84,7 +85,6 @@ class _MyAccountPageState extends State<MyAccountPage> {
       }
     }
   }
-
 
   Future<void> _updateUserAddress(String newAddress) async {
     if (user != null) {
@@ -144,7 +144,7 @@ class _MyAccountPageState extends State<MyAccountPage> {
 
   // Fonction pour afficher le formulaire de motivation en pop-up
   void _showUpdateMotivationDialog() {
-    String _selectedMotivation = userMotiv ?? "Poursuite d'études" ;
+    String _selectedMotivation = userMotiv ?? "Poursuite d'études";
 
     showDialog(
       context: context,
@@ -190,14 +190,16 @@ class _MyAccountPageState extends State<MyAccountPage> {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                _updateUserMotivation(_selectedMotivation); // Met à jour la motivation sélectionnée
+                _updateUserMotivation(
+                    _selectedMotivation); // Met à jour la motivation sélectionnée
                 Navigator.of(context).pop(); // Ferme la boîte de dialogue
               },
               child: const Text("Change"),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Ferme la boîte de dialogue sans faire de changement
+                Navigator.of(context)
+                    .pop(); // Ferme la boîte de dialogue sans faire de changement
               },
               child: const Text("Annuler"),
             ),
@@ -230,58 +232,57 @@ class _MyAccountPageState extends State<MyAccountPage> {
   }
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(title: const Text('Account')),
-    body: Center(
-      child: user != null
-          ? Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Welcome, ${userName ?? "User"} ${userFname ?? ""}!'),
-                Text('Age: $userAge'),
-                Text('Mail: $userMail'),
-                Text('Address: $userAdress'),
-                Text('Motivation: $userMotiv'),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _showUpdateAddressDialog,
-                  child: const Text('Change Address'),
-                ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: _showUpdateMotivationDialog,
-                  child: const Text('Change Motivation'),
-                ),
-                const SizedBox(height: 20),
-                Text('Scores:'),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: userScores.length,
-                    itemBuilder: (context, index) {
-                      final score = userScores[index];
-                      return ListTile(
-                        title: Text(score['category']),
-                        subtitle: Text(
-                          'Score: ${score['score']}/${score['quizLength']} - ${score['createdAt']}',
-                        ),
-                      );
-                    },
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Account')),
+      body: Center(
+        child: user != null
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Welcome, ${userName ?? "User"} ${userFname ?? ""}!'),
+                  Text('Age: $userAge'),
+                  Text('Mail: $userMail'),
+                  Text('Address: $userAdress'),
+                  Text('Motivation: $userMotiv'),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _showUpdateAddressDialog,
+                    child: const Text('Change Address'),
                   ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () async {
-                    await _scoreService.addScore(user!.uid, 18, 20, 'HTML');
-                    await _loadUserScores(); // Recharger les scores après ajout
-                  },
-                  child: const Text('Add Sample Score'),
-                ),
-              ],
-            )
-          : const Text('Please log in to view your account'),
-    ),
-  );
-}
-
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: _showUpdateMotivationDialog,
+                    child: const Text('Change Motivation'),
+                  ),
+                  const SizedBox(height: 20),
+                  Text('Scores:'),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: userScores.length,
+                      itemBuilder: (context, index) {
+                        final score = userScores[index];
+                        return ListTile(
+                          title: Text(score['category']),
+                          subtitle: Text(
+                            'Score: ${score['score']}/${score['quizLength']} - ${score['createdAt']}',
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await _scoreService.addScore(user!.uid, 18, 20, 'HTML');
+                      await _loadUserScores(); // Recharger les scores après ajout
+                    },
+                    child: const Text('Add Sample Score'),
+                  ),
+                ],
+              )
+            : const Text('Please log in to view your account'),
+      ),
+    );
+  }
 }

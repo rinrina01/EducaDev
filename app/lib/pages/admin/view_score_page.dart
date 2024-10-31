@@ -22,11 +22,13 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
   void initState() {
     super.initState();
     _fetchScoreDistribution();
-    _categoriesFuture = _scoreService.getAllCategories(); // Récupérer les catégories
+    _categoriesFuture =
+        _scoreService.getAllCategories(); // Récupérer les catégories
   }
 
   Future<void> _fetchScoreDistribution() async {
-    final distribution = await _graphService.getScoreDistribution(_selectedCategory);
+    final distribution =
+        await _graphService.getScoreDistribution(_selectedCategory);
     setState(() {
       _scoreDistribution = Future.value(distribution);
     });
@@ -82,8 +84,11 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
                     if (snapshot.hasError) {
                       return Center(child: Text('Error: ${snapshot.error}'));
                     }
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(child: Text('No data available'));
+                    }
 
-                    final scoreCounts = snapshot.data;
+                    final scoreCounts = snapshot.data!;
 
                     return Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -91,7 +96,7 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
                         width: 350,
                         height: 200,
                         child: Chart(
-                          data: scoreCounts!.asMap().entries.map((entry) {
+                          data: scoreCounts.asMap().entries.map((entry) {
                             return {
                               'score': entry.key.toString(),
                               'count': entry.value,
@@ -99,10 +104,12 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
                           }).toList(),
                           variables: {
                             'score': Variable(
-                              accessor: (Map<String, dynamic> row) => row['score'] as String,
+                              accessor: (Map<String, dynamic> row) =>
+                                  row['score'] as String,
                             ),
                             'count': Variable(
-                              accessor: (Map<String, dynamic> row) => row['count'] as int,
+                              accessor: (Map<String, dynamic> row) =>
+                                  row['count'] as int,
                             ),
                           },
                           marks: [
@@ -149,15 +156,19 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
                         return FutureBuilder<Map<String, dynamic>?>(
                           future: _userService.getUserData(scoreData['user']),
                           builder: (context, userSnapshot) {
-                            if (userSnapshot.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator());
+                            if (userSnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
                             }
                             if (userSnapshot.hasError) {
-                              return Center(child: Text('Error: ${userSnapshot.error}'));
+                              return Center(
+                                  child: Text('Error: ${userSnapshot.error}'));
                             }
 
                             final userData = userSnapshot.data;
-                            final userName = userData?['firstName'] ?? 'Unknown';
+                            final userName =
+                                userData?['firstName'] ?? 'Unknown';
                             final userSurname = userData?['name'] ?? 'User';
 
                             return Card(
@@ -169,11 +180,15 @@ class _ViewAllScoresPageState extends State<ViewAllScoresPage> {
                                   children: [
                                     Text(
                                       'User: $userName $userSurname',
-                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
                                     ),
                                     Text(
                                       'Category: ${scoreData['category']}',
-                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
                                     ),
                                     Text(
                                       'Score: ${scoreData['score']} / ${scoreData['quizLength']}',

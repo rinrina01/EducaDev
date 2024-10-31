@@ -1,4 +1,3 @@
-import 'package:app/main_layout.dart';
 import 'package:app/routes/routes.dart';
 import 'package:app/services/quiz_service.dart';
 import 'package:app/services/score_service.dart';
