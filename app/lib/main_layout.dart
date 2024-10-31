@@ -64,7 +64,7 @@ class MainLayout extends StatelessWidget {
             case 1:
               if (authProvider.isAdmin) {
                 FluroRouterSetup.router
-                    .navigateTo(context, 'admin-quiz', clearStack: true);
+                    .navigateTo(context, 'admin/quiz', clearStack: true);
               } else {
                 FluroRouterSetup.router.navigateTo(
                   context,
