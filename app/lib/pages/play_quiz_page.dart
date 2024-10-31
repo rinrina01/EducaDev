@@ -2,6 +2,7 @@ import 'package:app/main_layout.dart';
 import 'package:app/routes/routes.dart';
 import 'package:app/services/quiz_service.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 class PlayQuizPage extends StatefulWidget {
   final String quizId; // id of the quiz that the user previously clicked on
@@ -20,6 +21,7 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
   int currentQuestionIndex =
       0; // states will be used to track the current question
   Map<int, dynamic> userAnswers = {}; // Map of the answers the user selected
+  int timeLeft = 5;
 
   @override
   void initState() {
@@ -35,14 +37,65 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
     FluroRouterSetup.router.navigateTo(context, "/");
   }
 
-  void nextQuestion(int totalQuestions) {
-    if (currentQuestionIndex < totalQuestions - 1) {
+  //timer method
+  void _startCountDown() { 
+    Timer.periodic(Duration(seconds: 1), (timer) {
+      // if (timeLeft > 0) {
+        setState(() {
+            timeLeft--;
+        });
+        print("time left decrement");
+      // } else {
+      //   timer.cancel();
+      // }
+    });
+  }
+
+  void nextQuestion(int totalQuestions, List<dynamic> questions) {
+    if (currentQuestionIndex < totalQuestions - 1) { // ensure all questions are displayed to the user successively
       setState(() {
         currentQuestionIndex++;
       });
+      _startCountDown;
     } else {
-      // Handle end of quiz (e.g., navigate to a results page)
+      // Handle end of quiz
+      calculateScoreAndNavigate(totalQuestions, questions);
     }
+  }
+
+  void calculateScoreAndNavigate(int totalQuestions, List<dynamic> questions) {
+    int correctAnswersCount = 0;
+
+    for (int i = 0; i < totalQuestions; i++) { // for every question
+      final currentQuestion = questions[i];
+      final userAnswer = userAnswers[i];
+
+      if (!(userAnswer == null))  { // if userAnswer is not null 
+        if (currentQuestion['correct'].length == 1) { // check if the userAnswer is correct
+          // single correct answer case (RADIOHEAD)
+          if (userAnswer == currentQuestion['answers'][currentQuestion['correct'][0]]) {
+            // check if the userAnswer is the answer to the current question selected with index of the ONLY possible correct answer
+            correctAnswersCount++;
+          }
+        } else {
+          // multiple correct answers (CHECKBOX)
+          final List<dynamic> correctIndexes = currentQuestion['correct']; // get list of all correct answers indexes for this question
+          final List<dynamic> correctAnswers = correctIndexes.map((index) => currentQuestion['answers'][index]).toList();
+          // adds to new list only the right answers by selecting them with the indexes of the correct answers
+          
+          // check if userAnswer contains all correct answers
+          if (List.from(correctAnswers).every((answer) => (userAnswer as List<dynamic>).contains(answer))) {
+            correctAnswersCount++; // increment only if the user has ALL answers right
+          }
+        }
+      }
+    }
+    // calculate percentage score
+    print(correctAnswersCount);
+    print( ((correctAnswersCount / totalQuestions) * 100).toInt().toString() + "%");
+
+    // Navigate to results page (create your results page)
+    FluroRouterSetup.router.navigateTo(context, "/");
   }
 
   @override
@@ -85,45 +138,66 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
             title: "Quiz",
             child: Scaffold(
               appBar: AppBar(
+                automaticallyImplyLeading: false,
                   title: Text(
-                      "Question ${currentQuestionIndex + 1}")), // avoid writing "question 0" on user-destined quiz
-              body: Padding(
+                      "Question ${currentQuestionIndex + 1}/$totalQuestions")), // avoid writing "question 0" on user-destined quiz
+                body: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text("Time left: ${timeLeft.toString()}", // display timer
+                    style: TextStyle(fontSize: 18, color: Colors.red)),
+                    const SizedBox(height: 20),
                     Text(currentQuestion['question'],
                         style: TextStyle(
                             fontSize: 18)), // get String question for user
                     const SizedBox(height: 20),
 
-                    ...List<Widget>.generate(currentQuestion['answers'].length,
-                        (index) {
-                      // loop to print all answer options
-                      final answer = currentQuestion['answers']
-                          [index]; // get answers one by one
-                      if (currentQuestion['correct'].length == 1) {
-                        return RadioListTile(
-                          title: Text(answer),
-                          // display user answer
-                          value: answer,
-                          // store value to send to db
-                          groupValue: userAnswers[currentQuestionIndex],
-                          // stock the answer that the user chose at the index of the current question in userAnswers MAP
-                          onChanged: (value) {
-                            setState(() {
-                              userAnswers[currentQuestionIndex] = value;
-                            });
-                          },
-                        );
-                      } else {
-                        return Text("hello there");
-                      }
-                    }),
+
+                  ...List<Widget>.generate(currentQuestion['answers'].length, (index) {
+                    // loop to display all answer options
+                    final answer = currentQuestion['answers'][index]; // get answers one by one
+                    if (currentQuestion['correct'].length == 1) {
+                      // RadioListTile -> only one correct answer
+                      return RadioListTile(
+                        title: Text(answer),
+                        value: answer,
+                        groupValue: userAnswers[currentQuestionIndex],
+                        onChanged: (value) {
+                          setState(() {
+                            userAnswers[currentQuestionIndex] = value;
+                          });
+                        },
+                      );
+                    } else {
+                      // CheckboxListTile -> multiple correct answers
+                      return CheckboxListTile(
+                        title: Text(answer),
+                        value: (userAnswers[currentQuestionIndex] ?? []).contains(answer),
+                        onChanged: (bool? checked) {
+                          setState(() {
+                            if (checked == true) {
+                              // Add answer to selected list if checked
+                              userAnswers[currentQuestionIndex] = [
+                                ...(userAnswers[currentQuestionIndex] ?? []),
+                                answer
+                              ];
+                            } else {
+                              // Remove answer from selected list if unchecked
+                              userAnswers[currentQuestionIndex] = [
+                                ...(userAnswers[currentQuestionIndex] ?? [])
+                              ]..remove(answer);
+                            }
+                          });
+                        },
+                      );
+                    }
+                  }),
 
                     const SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: () => nextQuestion(totalQuestions),
+                      onPressed: () => nextQuestion(totalQuestions, questions),
                       child: Text(currentQuestionIndex < totalQuestions - 1
                           ? 'Next'
                           : 'Submit'),
