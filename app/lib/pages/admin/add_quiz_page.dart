@@ -1,4 +1,5 @@
 import 'package:app/main_layout.dart';
+import 'package:app/routes/routes.dart';
 import 'package:app/services/quiz_service.dart';
 import 'package:flutter/material.dart';
 
@@ -69,6 +70,8 @@ class _AddQuizPageState extends State<AddQuizPage> {
               'correct': correctAnswers,
               'time': timeLimit,
             });
+
+            FluroRouterSetup.router.navigateTo(context, "admin/quiz");
           }
 
           await QuizService().addQuiz(category, questions);

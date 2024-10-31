@@ -1,4 +1,5 @@
 import 'package:app/main_layout.dart';
+import 'package:app/routes/routes.dart';
 import 'package:app/services/quiz_service.dart';
 import 'package:flutter/material.dart';
 
@@ -100,6 +101,8 @@ class _UpdateQuizPageState extends State<UpdateQuizPage> {
             'correct': correctAnswers,
             'time': timeLimit,
           });
+
+          FluroRouterSetup.router.navigateTo(context, "admin/quiz");
         }
 
         try {
