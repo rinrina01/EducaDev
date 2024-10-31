@@ -21,15 +21,22 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
   late Future<Map<String, dynamic>> _quizzesFuture;
   late String category;
 
-  int currentQuestionIndex =
-      0; // states will be used to track the current question
+  int currentQuestionIndex = 0; // states will be used to track the current question
   Map<int, dynamic> userAnswers = {}; // Map of the answers the user selected
-  int timeLeft = 5;
+  int timeLeft; // 30-second timer for each question
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _getQuizById(widget.quizId); // get quiz info
+    _startCountDown(); // start the timer when the page is initialized
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // cancel timer when widget is disposed
+    super.dispose();
   }
 
   void _getQuizById(String quizId) {
@@ -40,34 +47,47 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
     FluroRouterSetup.router.navigateTo(context, "/");
   }
 
-  //timer method
+  // timer method, with reset for each question
   void _startCountDown() {
-    Timer.periodic(Duration(seconds: 1), (timer) {
-      // if (timeLeft > 0) {
-      setState(() {
-        timeLeft--;
-      });
-      print("time left decrement");
-      // } else {
-      //   timer.cancel();
-      // }
+    // reset timer for each question
+    setState(() {
+      timeLeft = 30;
+    });
+
+    _timer?.cancel(); // cancel any existing timer
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (timeLeft > 0) {
+        setState(() {
+          timeLeft--;
+        });
+      } else {
+        timer.cancel();
+        nextQuestion(); // go to the next question when time is up
+      }
     });
   }
 
-  void nextQuestion(int totalQuestions, List<dynamic> questions) {
-    if (currentQuestionIndex < totalQuestions - 1) {
-      // ensure all questions are displayed to the user successively
-      setState(() {
-        currentQuestionIndex++;
-      });
-      _startCountDown;
-    } else {
-      // Handle end of quiz
-      calculateScoreAndNavigate(totalQuestions, questions);
-    }
+  void nextQuestion() {
+    final totalQuestions = _quizzesFuture.then((data) => data['questions'].length);
+    
+    totalQuestions.then((totalQuestions) {
+      if (currentQuestionIndex < totalQuestions - 1) {
+        // ensure all questions are displayed to the user successively
+        setState(() {
+          currentQuestionIndex++;
+        });
+        _startCountDown(); // restart timer for the next question
+      } else {
+        // Handle end of quiz
+        _timer?.cancel(); // stop timer at end of quiz
+        calculateScoreAndNavigate(totalQuestions);
+      }
+    });
   }
 
-  void calculateScoreAndNavigate(int totalQuestions, List<dynamic> questions) {
+  void calculateScoreAndNavigate(int totalQuestions) async {
+    // Calculate the score based on user's answers and navigate to results page
+    final questions = await _quizzesFuture.then((data) => data['questions']);
     int correctAnswersCount = 0;
 
     for (int i = 0; i < totalQuestions; i++) {
@@ -75,41 +95,39 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
       final currentQuestion = questions[i];
       final userAnswer = userAnswers[i];
 
-      if (!(userAnswer == null)) {
+      if (userAnswer != null) {
         // if userAnswer is not null
         if (currentQuestion['correct'].length == 1) {
           // check if the userAnswer is correct
           // single correct answer case (RADIOHEAD)
-          if (userAnswer ==
-              currentQuestion['answers'][currentQuestion['correct'][0]]) {
+          if (userAnswer == currentQuestion['answers'][currentQuestion['correct'][0]]) {
             // check if the userAnswer is the answer to the current question selected with index of the ONLY possible correct answer
             correctAnswersCount++;
           }
         } else {
           // multiple correct answers (CHECKBOX)
-          final List<dynamic> correctIndexes = currentQuestion[
-              'correct']; // get list of all correct answers indexes for this question
-          final List<dynamic> correctAnswers = correctIndexes
-              .map((index) => currentQuestion['answers'][index])
-              .toList();
+          final correctIndexes = currentQuestion['correct'];
+          final correctAnswers = correctIndexes.map((index) => currentQuestion['answers'][index]).toList();
           // adds to new list only the right answers by selecting them with the indexes of the correct answers
 
           // check if userAnswer contains all correct answers
-          if (List.from(correctAnswers).every(
-              (answer) => (userAnswer as List<dynamic>).contains(answer))) {
+          if (correctAnswers.every((answer) => (userAnswer as List<dynamic>).contains(answer))) {
             correctAnswersCount++; // increment only if the user has ALL answers right
           }
         }
       }
     }
 
-    ScoreService().addScore(FirebaseAuth.instance.currentUser!.uid,
-        correctAnswersCount, totalQuestions, category);
+    ScoreService().addScore(
+      FirebaseAuth.instance.currentUser!.uid,
+      correctAnswersCount,
+      totalQuestions,
+      category,
+    );
     // calculate percentage score
     print(totalQuestions);
     print(correctAnswersCount);
-    print(((correctAnswersCount / totalQuestions) * 100).toInt().toString() +
-        "%");
+    print(((correctAnswersCount / totalQuestions) * 100).toInt().toString() + "%");
 
     // Navigate to results page (create your results page)
     FluroRouterSetup.router.navigateTo(context, "/");
@@ -123,58 +141,45 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // while fetching
           return const Scaffold(
-            body:
-                Center(child: CircularProgressIndicator()), // loading animation
+            body: Center(child: CircularProgressIndicator()), // loading animation
           );
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           // if not data in quiz
           goHome(); // redirect to home
           return const Scaffold(
-            body: Center(
-              child: Text('No quiz data found'),
-            ),
+            body: Center(child: Text('No quiz data found')),
           );
         } else if (snapshot.hasError) {
-          // connexion error
+          // connection error
           goHome(); // redirect to home
           return Scaffold(
-            body: Center(
-              child: Text('Error: ${snapshot.error}'),
-            ),
+            body: Center(child: Text('Error: ${snapshot.error}')),
           );
         } else {
           // if everything working
-          final List<dynamic> questions =
-              snapshot.data!['questions']; // get questions/answers
-          final totalQuestions =
-              questions.length; // total number of questions in the quiz
-          final currentQuestion = questions[
-              currentQuestionIndex]; // get question based on the current question index
+          final List<dynamic> questions = snapshot.data!['questions']; // get questions/answers
+          final currentQuestion = questions[currentQuestionIndex]; // get question based on the current question index
           category = snapshot.data!['category'];
 
           return Scaffold(
             appBar: AppBar(
-                automaticallyImplyLeading: false,
-                title: Text(
-                    "Question ${currentQuestionIndex + 1}/$totalQuestions")), // avoid writing "question 0" on user-destined quiz
+              automaticallyImplyLeading: false,
+              title: Text("Question ${currentQuestionIndex + 1}/${questions.length}"), // avoid writing "question 0" on user-destined quiz
+            ),
             body: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Time left: ${timeLeft.toString()}", // display timer
-                      style: TextStyle(fontSize: 18, color: Colors.red)),
+                  Text("Time left: $timeLeft", // display timer
+                      style: const TextStyle(fontSize: 18, color: Colors.red)),
                   const SizedBox(height: 20),
                   Text(currentQuestion['question'],
-                      style: TextStyle(
-                          fontSize: 18)), // get String question for user
+                      style: const TextStyle(fontSize: 18)), // get String question for user
                   const SizedBox(height: 20),
-
-                  ...List<Widget>.generate(currentQuestion['answers'].length,
-                      (index) {
+                  ...List<Widget>.generate(currentQuestion['answers'].length, (index) {
                     // loop to display all answer options
-                    final answer = currentQuestion['answers']
-                        [index]; // get answers one by one
+                    final answer = currentQuestion['answers'][index]; // get answers one by one
                     if (currentQuestion['correct'].length == 1) {
                       // RadioListTile -> only one correct answer
                       return RadioListTile(
@@ -191,8 +196,7 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
                       // CheckboxListTile -> multiple correct answers
                       return CheckboxListTile(
                         title: Text(answer),
-                        value: (userAnswers[currentQuestionIndex] ?? [])
-                            .contains(answer),
+                        value: (userAnswers[currentQuestionIndex] ?? []).contains(answer),
                         onChanged: (bool? checked) {
                           setState(() {
                             if (checked == true) {
@@ -212,11 +216,10 @@ class _PlayQuizPageState extends State<PlayQuizPage> {
                       );
                     }
                   }),
-
                   const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: () => nextQuestion(totalQuestions, questions),
-                    child: Text(currentQuestionIndex < totalQuestions - 1
+                    onPressed: () => nextQuestion(),
+                    child: Text(currentQuestionIndex < questions.length - 1
                         ? 'Next'
                         : 'Submit'),
                   ),
